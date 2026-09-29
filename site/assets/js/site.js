@@ -1,0 +1,68 @@
+/* Outcore Tech — progressive enhancement only.
+   Without this file the form falls back to a native POST (spec §5.3). */
+(() => {
+  'use strict';
+
+  const SEND_TIMEOUT_MS = 15000;
+  const SUCCESS_TEXT = "Thanks — your message is on its way. I'll be in touch soon.";
+
+  // Resolves true only for an OK response whose JSON body has success === true (spec §5.3 item 2).
+  async function send(url, data) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
+      const body = await response.json();
+      return response.ok && body !== null && typeof body === 'object' && body.success === true;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function initContactForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+    const button = form.querySelector('button[type="submit"]');
+    const status = form.querySelector('.form-status');
+    const error = form.querySelector('.form-error');
+    const errorTemplate = document.getElementById('form-error-template');
+    const idleLabel = button.textContent;
+    let sending = false;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (sending || !form.reportValidity()) return;
+      sending = true;
+      status.textContent = '';
+      error.replaceChildren();
+      button.disabled = true;
+      button.textContent = 'Sending…';
+
+      const data = Object.fromEntries(new FormData(form));
+      // The redirect field is for the no-JS fallback only; sent from fetch it makes the API
+      // answer with a cross-origin redirect that reports a false failure (spec §5.3).
+      delete data.redirect;
+
+      const ok = await send(form.action, data);
+
+      sending = false;
+      button.disabled = false;
+      button.textContent = idleLabel;
+      if (ok) {
+        form.reset();
+        status.textContent = SUCCESS_TEXT;
+      } else {
+        error.replaceChildren(errorTemplate.content.cloneNode(true));
+      }
+    });
+  }
+
+  initContactForm();
+})();
