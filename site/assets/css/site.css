@@ -169,3 +169,141 @@ svg { display: block; }
   text-decoration: none;
 }
 .skip-link:focus { top: 8px; }
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-h);
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mark { width: 28px; height: 28px; flex: none; }
+.mark-ring { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.mark-core, .mark-node { fill: var(--accent); }
+.mark-trace { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.site-nav ul { display: flex; align-items: center; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
+.site-nav a:not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+.site-nav a:not(.btn):hover { color: var(--accent-text); }
+.nav-cta { margin-left: 0.5rem; }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 3.5rem 0 3rem;
+  border-bottom: 1px solid var(--line);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at 70% 35%, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse at 70% 35%, #000 25%, transparent 75%);
+  opacity: 0.6;
+}
+.hero-inner { position: relative; display: grid; gap: 2.5rem; align-items: center; }
+@media (min-width: 900px) {
+  .hero { padding: 5.5rem 0 4rem; }
+  .hero-inner { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0 0 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-wrap: balance;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.hero-sub { max-width: 38rem; margin: 1.25rem 0 2rem; font-size: 1.1875rem; color: var(--muted); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+@media (max-width: 479.98px) {
+  .status { font-size: 0.75rem; letter-spacing: 0.06em; }
+  .hero-actions .btn { flex: 1 1 100%; }
+}
+.icon-arrow { display: inline-block; width: 1em; height: 1em; }
+.icon-arrow path { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Sections ---------- */
+.section { padding: 4.5rem 0; border-bottom: 1px solid var(--line); }
+@media (min-width: 900px) { .section { padding: 6rem 0; } }
+.section-head { max-width: 46rem; margin-bottom: 2.5rem; }
+.contact-lead { color: var(--muted); font-size: 1.125rem; }
+
+/* ---------- Footer ---------- */
+.site-footer { padding: 2rem 0; color: var(--muted); font-size: 0.9375rem; }
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+}
+.site-footer p { margin: 0; }
+.site-footer ul { display: flex; flex-wrap: wrap; margin: 0 -0.5rem; padding: 0; list-style: none; }
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.5rem;
+  color: var(--text);
+  text-decoration: none;
+}
+.site-footer a:hover { color: var(--accent-text); }
+.footer-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
