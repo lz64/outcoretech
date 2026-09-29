@@ -307,3 +307,33 @@ svg { display: block; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+/* ---------- Hero schematic (decorative; motion capped at 4.9 s, off under reduced motion) ---------- */
+.schematic { width: 100%; max-width: 520px; height: auto; justify-self: center; }
+@media (max-width: 719.98px) { .schematic { max-width: 360px; } }
+.sch-trace { fill: none; stroke: var(--muted); stroke-opacity: 0.45; stroke-width: 1.5; }
+.sch-via { fill: var(--bg); stroke: var(--muted); stroke-opacity: 0.7; stroke-width: 1.5; }
+.sch-pad { fill: var(--accent); }
+.sch-node rect { fill: var(--surface); stroke: var(--muted); stroke-opacity: 0.6; stroke-width: 1.5; }
+.sch-label { font: 500 13px var(--font-mono); letter-spacing: 0.12em; fill: var(--text); }
+.sch-index { font: 400 10px var(--font-mono); letter-spacing: 0.1em; fill: var(--muted); }
+.sch-pulse {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 6 200;
+  stroke-dashoffset: 6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sch-pulse { animation: sch-pulse 2.4s ease-in-out 0.1s 2; }
+}
+@keyframes sch-pulse {
+  from { stroke-dashoffset: 6; }
+  to { stroke-dashoffset: -100; }
+}
+
+/* ---------- Reduced motion: nothing moves ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
