@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Outcore Tech Open Graph image source</title>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("../../site/assets/fonts/ibm-plex-sans-latin-var.woff2") format("woff2"); font-weight: 100 700; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("../../site/assets/fonts/ibm-plex-mono-latin-500.woff2") format("woff2"); font-weight: 500; }
+    html, body { margin: 0; width: 1200px; height: 630px; }
+    body { position: relative; overflow: hidden; background: #0e1115; color: #e7eaee; font-family: "IBM Plex Sans", sans-serif; }
+    .grid {
+      position: absolute; inset: 0; opacity: 0.55;
+      background-image: linear-gradient(#27303a 1px, transparent 1px), linear-gradient(90deg, #27303a 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .frame { position: absolute; inset: 56px 64px; display: flex; flex-direction: column; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 18px; font: 500 28px "IBM Plex Mono", monospace; letter-spacing: 0.14em; }
+    .brand svg { width: 52px; height: 52px; }
+    .ring { fill: none; stroke: #e7eaee; stroke-width: 2; stroke-linecap: round; }
+    .core, .node { fill: #ffb020; }
+    .trace { fill: none; stroke: #ffb020; stroke-width: 2; stroke-linecap: round; }
+    .status { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; font: 500 18px "IBM Plex Mono", monospace; letter-spacing: 0.12em; color: #9ba5b1; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: #ffb020; box-shadow: 0 0 0 6px rgba(255, 176, 32, 0.25); }
+    h1 { margin: 0; max-width: 1000px; font-size: 60px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
+    .strip { display: flex; gap: 30px; font: 500 17px "IBM Plex Mono", monospace; letter-spacing: 0.12em; color: #ffb020; }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="frame">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path class="ring" d="M26.34 12.24A11 11 0 1 1 19.76 5.66"/>
+        <circle class="core" cx="16" cy="16" r="4.5"/>
+        <path class="trace" d="M19.2 12.8L26.5 5.5"/>
+        <circle class="node" cx="27" cy="5" r="2.25"/>
+      </svg>
+      OUTCORE TECH
+    </div>
+    <div>
+      <p class="status"><span class="dot"></span>SYSTEMS ONLINE // 25 YEARS IN THE FIELD</p>
+      <h1>Engineering that connects the plant floor, the network, and the cloud.</h1>
+    </div>
+    <div class="strip">
+      <span>01 AI ENGINEERING</span><span>02 IOT PROTOTYPING</span><span>03 SYSTEMS AUTOMATION</span><span>04 PROCESS OPTIMIZATION</span>
+    </div>
+  </div>
+</body>
+</html>
