@@ -227,7 +227,8 @@ svg { display: block; }
   padding: 3.5rem 0 3rem;
   border-bottom: 1px solid var(--line);
 }
-.hero::before {
+.hero::before,
+.not-found::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -609,3 +610,17 @@ svg { display: block; }
 @media (min-width: 480px) and (max-width: 719.98px) {
   .site-nav ul { padding-inline: 24px; }
 }
+
+/* ---------- 404 (reuses the hero grid through .not-found::before) ---------- */
+.not-found {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100dvh - var(--header-h));
+  padding: 6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.not-found .container { position: relative; }
+.not-found h1 { max-width: 20ch; }
