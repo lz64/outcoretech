@@ -1,0 +1,29 @@
+{
+  "name": "outcoretech-site",
+  "private": true,
+  "type": "module",
+  "description": "Source for https://outcoretech.com (deployed folder: site/)",
+  "engines": {
+    "node": ">=24.8"
+  },
+  "scripts": {
+    "serve": "node tools/serve.mjs site",
+    "test:unit": "node --test \"tools/*.test.mjs\"",
+    "validate:html": "html-validate \"site/**/*.html\"",
+    "check": "npm run test:unit && npm run validate:html && node tools/check-contrast.mjs && node tools/check-links.mjs && node tools/check-config.mjs",
+    "check:live": "node tools/check-config.mjs --require-live-key",
+    "test:e2e": "playwright test",
+    "test": "npm run check && npm run test:e2e",
+    "fonts": "node tools/copy-fonts.mjs",
+    "images": "node tools/make-images.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@fontsource-variable/ibm-plex-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "chrome-launcher": "1.2.1",
+    "html-validate": "11.16.1",
+    "lighthouse": "13.5.0"
+  }
+}
