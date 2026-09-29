@@ -79,7 +79,7 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 - Decorative schematic (inline SVG, `aria-hidden="true"`): the nodes `SENSOR — CONTROLLER — EDGE — CLOUD` joined by circuit traces.
   - After load, an amber pulse travels the traces for **at most 5 seconds in total** (for example a 2.4 s CSS animation with `animation-iteration-count: 2`), then stops (WCAG 2.2.2).
   - The pulse doesn't run at all under `prefers-reduced-motion: reduce`, and it is CSS only.
-  - Below 720 px the schematic sits under the text at reduced size.
+  - Below 900 px the schematic sits under the text; below 45em (720 px at the default text size) it is also shown at reduced size.
 
 ### 3.3 Services — `// SERVICES` (`id="services"`; cards `#ai`, `#iot`, `#automation`, `#process`)
 **H2:** Four disciplines. One connected system.
