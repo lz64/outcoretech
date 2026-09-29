@@ -572,3 +572,40 @@ svg { display: block; }
 .form-error:empty { margin-top: -1.125rem; padding: 0; border: 0; background: none; }
 .form-sent { margin-bottom: 1.25rem; }
 .form-sent:not(:target) { display: none; }
+
+/* ---------- Mobile nav (below 720 px); state lives in the button's aria-expanded ---------- */
+.nav-toggle { display: none; }
+@media (max-width: 719.98px) {
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 0.875rem;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius);
+    font: 500 0.875rem var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .site-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-toggle[aria-expanded="true"] + .site-nav { display: block; }
+  .site-nav ul { flex-direction: column; align-items: stretch; gap: 0; padding: 0.5rem 16px 1rem; }
+  .site-nav a:not(.btn) { display: flex; min-height: 48px; padding: 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
+  .nav-cta { display: flex; margin: 0.75rem 0 0; }
+}
+@media (min-width: 480px) and (max-width: 719.98px) {
+  .site-nav ul { padding-inline: 24px; }
+}

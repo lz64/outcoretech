@@ -1,10 +1,33 @@
 /* Outcore Tech — progressive enhancement only.
-   Without this file the form falls back to a native POST (spec §5.3). */
+   Without this file the nav falls back to nojs.css and the form to a native POST (spec §3.1, §5.3). */
 (() => {
   'use strict';
 
   const SEND_TIMEOUT_MS = 15000;
   const SUCCESS_TEXT = "Thanks — your message is on its way. I'll be in touch soon.";
+
+  function initNav() {
+    const toggle = document.querySelector('.nav-toggle');
+    const nav = document.getElementById('site-nav');
+    if (!toggle || !nav) return;
+    const desktop = window.matchMedia('(min-width: 720px)');
+    const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
+    const setOpen = (open) => toggle.setAttribute('aria-expanded', String(open));
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()));
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a')) setOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen()) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    desktop.addEventListener('change', (event) => {
+      if (event.matches) setOpen(false);
+    });
+  }
 
   // Resolves true only for an OK response whose JSON body has success === true (spec §5.3 item 2).
   async function send(url, data) {
@@ -64,5 +87,6 @@
     });
   }
 
+  initNav();
   initContactForm();
 })();

@@ -1,0 +1,11 @@
+/* Loaded only when JavaScript is off (via <noscript>): the menu button can't work, so show the links. */
+.nav-toggle { display: none !important; }
+
+@media (max-width: 719.98px) {
+  .site-header { position: static; height: auto; }
+  .header-inner { flex-wrap: wrap; padding-block: 0.5rem; }
+  .site-nav { display: block; position: static; width: 100%; background: none; border: 0; }
+  .site-nav ul { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0 0.25rem; padding: 0; }
+  .site-nav a:not(.btn) { padding: 0 0.5rem; border: 0; }
+  .nav-cta { margin: 0 0 0 0.25rem; }
+}
