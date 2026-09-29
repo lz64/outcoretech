@@ -10,7 +10,7 @@
     const toggle = document.querySelector('.nav-toggle');
     const nav = document.getElementById('site-nav');
     if (!toggle || !nav) return;
-    const desktop = window.matchMedia('(min-width: 720px)');
+    const desktop = window.matchMedia('(min-width: 45em)');
     const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
     const setOpen = (open) => toggle.setAttribute('aria-expanded', String(open));
 
@@ -63,6 +63,7 @@
       event.preventDefault();
       if (sending || !form.reportValidity()) return;
       sending = true;
+      const hadFocus = document.activeElement === button;
       status.textContent = '';
       error.replaceChildren();
       button.disabled = true;
@@ -78,6 +79,9 @@
       sending = false;
       button.disabled = false;
       button.textContent = idleLabel;
+      // Disabling the focused button drops focus to <body>; return it so screen-reader
+      // users don't lose their place (unless they moved focus elsewhere while sending).
+      if (hadFocus && document.activeElement === document.body) button.focus();
       if (ok) {
         form.reset();
         status.textContent = SUCCESS_TEXT;

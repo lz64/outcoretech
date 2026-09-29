@@ -55,6 +55,25 @@ test('the button says Sending… and is disabled while the request is in flight'
   await expect(button).toBeEnabled();
 });
 
+// Finding F3: disabling the focused submit button must not strand focus on <body>.
+test('the submit button regains focus after a successful submit', async ({ page }) => {
+  await page.route(API, async (route) => {
+    await route.fulfill(json(200, { success: true }));
+  });
+  await fillForm(page);
+  const button = page.getByRole('button', { name: 'Send message' });
+  await button.click();
+  await expect(button).toBeFocused();
+});
+
+test('the submit button regains focus after a failed submit', async ({ page }) => {
+  await page.route(API, (route) => route.abort('failed'));
+  await fillForm(page);
+  const button = page.getByRole('button', { name: 'Send message' });
+  await button.click();
+  await expect(button).toBeFocused();
+});
+
 const FAILURES = {
   'HTTP 500 with an error body': (route) => route.fulfill(json(500, { statusCode: 500, error: 'Internal' })),
   'HTTP 429 rate limit': (route) => route.fulfill(json(429, { success: false, message: 'Too many requests' })),

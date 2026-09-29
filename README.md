@@ -12,6 +12,8 @@ The design spec is `docs/superpowers/specs/2026-09-28-outcore-tech-site-design.m
 
 ## Preview locally
 
+Prerequisite: Node.js 24.8 or newer (`node -v`).
+
 ```bash
 npm install
 npx playwright install chromium
@@ -27,7 +29,7 @@ npm test               # all of the above plus the browser tests
 
 ## Deploy
 
-Push to `main`. GitHub Actions validates, then publishes `site/` to GitHub Pages at https://outcoretech.com.
+Push to `main`. GitHub Actions validates, then publishes `site/` to GitHub Pages at https://lz64.github.io/outcoretech/ until the custom domain is connected, then at https://outcoretech.com.
 After launch there is no staging URL, so preview locally before pushing.
 
 ## Maintenance commands

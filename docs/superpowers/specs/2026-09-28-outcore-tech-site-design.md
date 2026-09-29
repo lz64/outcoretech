@@ -60,15 +60,15 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 ### 3.1 Header (sticky, `--header-h: 64px`)
 - Logo mark and the wordmark **OUTCORE TECH**, linking to the top of the page. The brand link's accessible name is "Outcore Tech", taken from the wordmark. The logo SVG is decorative and `aria-hidden`, so the name isn't announced twice.
 - `<nav id="site-nav" aria-label="Primary">` holds **Services · Industries · Work · About** and a highlighted **Contact** button.
-- **≥ 720 px:** the links are inline.
-- **Below 720 px:** the header shows only the logo mark, the wordmark, and `<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>`.
+- **≥ 45em (720 px at the default text size):** the links are inline.
+- **Below 45em (720 px at the default text size):** the header shows only the logo mark, the wordmark, and `<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>`.
   - `#site-nav` is collapsed until toggled, then opens as a full-width panel below the header.
-  - The panel closes on Escape (focus returns to the toggle), when a link is activated, and when the viewport grows to ≥ 720 px.
+  - The panel closes on Escape (focus returns to the toggle), when a link is activated, and when the viewport grows to ≥ 45em.
   - The collapsed state comes from CSS alone. No class is toggled at load, so the nav causes no layout shift.
 - **Without JS:** `<noscript><link rel="stylesheet" href="assets/css/nojs.css"></noscript>` in `<head>` does three things:
   - hides the toggle;
   - shows `#site-nav` as a wrapping row under the logo, with each link at least 44 px tall;
-  - makes the header `position: static` below 720 px.
+  - makes the header `position: static` below 45em (720 px at the default text size).
 
 ### 3.2 Hero
 - Status line (mono): `● SYSTEMS ONLINE // 25 YEARS IN THE FIELD`. The dot is a CSS circle, not a text glyph.
@@ -300,6 +300,7 @@ If any value fails the check, it is adjusted in the build and the new value is r
 - `html { scroll-padding-top: calc(var(--header-h) + 8px); }` keeps anchor targets and focused elements clear of the sticky header (WCAG 2.4.11).
 - Smooth scrolling applies only under `@media (prefers-reduced-motion: no-preference)`.
 - No horizontal scroll at any width down to 320 px. Tap targets are at least 44×44 px.
+- The header's mobile-menu breakpoint is 45em, so it moves with the visitor's default text size (720 px at 16 px).
 
 ### 4.5 Accessibility
 - The skip link targets `<main id="main" tabindex="-1">`. There are semantic landmarks, one H1, and an ordered heading hierarchy.

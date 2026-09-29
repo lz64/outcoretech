@@ -1,7 +1,7 @@
 /* Loaded only when JavaScript is off (via <noscript>): the menu button can't work, so show the links. */
 .nav-toggle { display: none !important; }
 
-@media (max-width: 719.98px) {
+@media (max-width: 44.999em) {
   .site-header { position: static; height: auto; }
   .header-inner { flex-wrap: wrap; padding-block: 0.5rem; }
   .site-nav { display: block; position: static; width: 100%; background: none; border: 0; }

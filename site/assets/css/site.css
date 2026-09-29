@@ -311,7 +311,7 @@ svg { display: block; }
 
 /* ---------- Hero schematic (decorative; motion capped at 4.9 s, off under reduced motion) ---------- */
 .schematic { width: 100%; max-width: 520px; height: auto; justify-self: center; }
-@media (max-width: 719.98px) { .schematic { max-width: 360px; } }
+@media (max-width: 44.999em) { .schematic { max-width: 360px; } }
 .sch-trace { fill: none; stroke: var(--muted); stroke-opacity: 0.45; stroke-width: 1.5; }
 .sch-via { fill: var(--bg); stroke: var(--muted); stroke-opacity: 0.7; stroke-width: 1.5; }
 .sch-pad { fill: var(--accent); }
@@ -574,9 +574,9 @@ svg { display: block; }
 .form-sent { margin-bottom: 1.25rem; }
 .form-sent:not(:target) { display: none; }
 
-/* ---------- Mobile nav (below 720 px); state lives in the button's aria-expanded ---------- */
+/* ---------- Mobile nav (below 45em / 720 px at the default text size); state lives in the button's aria-expanded ---------- */
 .nav-toggle { display: none; }
-@media (max-width: 719.98px) {
+@media (max-width: 44.999em) {
   .nav-toggle {
     display: inline-flex;
     align-items: center;
@@ -607,7 +607,7 @@ svg { display: block; }
   .site-nav a:not(.btn) { display: flex; min-height: 48px; padding: 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
   .nav-cta { display: flex; margin: 0.75rem 0 0; }
 }
-@media (min-width: 480px) and (max-width: 719.98px) {
+@media (min-width: 480px) and (max-width: 44.999em) {
   .site-nav ul { padding-inline: 24px; }
 }
 

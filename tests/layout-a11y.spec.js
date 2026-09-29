@@ -101,7 +101,7 @@ test('every tab stop shows a visible focus ring at least 2px wide', async ({ pag
 test('deep links and strip links land below the sticky header', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1280, height: 800 });
-  for (const hash of ['#services', '#work', '#about']) {
+  for (const hash of ['#services', '#work', '#about', '#contact']) {
     await page.goto(`/${hash}`);
     const top = await page.locator(hash).evaluate((el) => el.getBoundingClientRect().top);
     expect(top, hash).toBeGreaterThanOrEqual(64);
@@ -123,6 +123,32 @@ test('a 125% default font size causes no horizontal scroll or clipped header at 
   const toggle = await page.locator('.nav-toggle').boundingBox();
   expect(toggle.x + toggle.width).toBeLessThanOrEqual(375);
   expect(toggle.y + toggle.height).toBeLessThanOrEqual(header.y + header.height);
+});
+
+// Finding F2: the nav breakpoint is em-based so it moves with the visitor's default text size.
+test('a 20px browser default font size at 768px shows the mobile nav toggle with no overflow', async ({ page }) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Page.setFontSizes', { fontSizes: { standard: 20 } });
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.goto('/');
+  await fontsReady(page);
+  expect(await overflowX(page)).toBe(0);
+  await expect(page.locator('.nav-toggle')).toBeVisible();
+});
+
+test.describe('no-JS fallback with a 20px browser default font size', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('shows all 5 primary nav links at 768px with no horizontal overflow', async ({ page }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Page.setFontSizes', { fontSizes: { standard: 20 } });
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.goto('/');
+    expect(await overflowX(page)).toBe(0);
+    for (const name of ['Services', 'Industries', 'Work', 'About', 'Contact']) {
+      await expect(page.locator('#site-nav').getByRole('link', { name, exact: true })).toBeVisible();
+    }
+  });
 });
 
 test('no third-party requests on load, and both font families load', async ({ page, baseURL }) => {
