@@ -58,7 +58,7 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 **Naming rule:** service headings, the contact select, and the meta description use the full name "Production Process Optimization". The hero strip, project tags, and footer use the short form "Process Optimization" (or `OPTIMIZATION` in mono).
 
 ### 3.1 Header (sticky, `--header-h: 64px`)
-- Logo mark and the wordmark **OUTCORE TECH**, linking to the top of the page. The logo SVG has an accessible name.
+- Logo mark and the wordmark **OUTCORE TECH**, linking to the top of the page. The brand link's accessible name is "Outcore Tech", taken from the wordmark. The logo SVG is decorative and `aria-hidden`, so the name isn't announced twice.
 - `<nav id="site-nav" aria-label="Primary">` holds **Services · Industries · Work · About** and a highlighted **Contact** button.
 - **≥ 720 px:** the links are inline.
 - **Below 720 px:** the header shows only the logo mark, the wordmark, and `<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>`.
@@ -235,6 +235,16 @@ Hidden fields are listed in §5.3.
   - `knowsAbout`: AI engineering, LLM applications, machine learning, computer vision, IoT prototyping, systems automation, production process optimization, ESP32, LoRaWAN, PLC, MES/SCADA, HVAC control, building automation, real-time video, fiber optics, Python, Azure, AWS
   - Address and area served are left out because neither was supplied. Email is deliberately left out to limit scraping.
 - `robots.txt` allows everything and references `https://outcoretech.com/sitemap.xml`. `sitemap.xml` lists only `https://outcoretech.com/`, with no `<lastmod>`.
+
+### 3.12 Interface microcopy (added during planning; Ari to approve)
+These are small UI strings that §3.1–3.11 didn't list:
+- Skip link: "Skip to content"
+- Mobile menu button: "Menu"
+- The Company field's label reads "Company (optional)"
+- Project card labels: "Project 01" to "Project 05", displayed in uppercase mono
+- Industry tiles are numbered 01–07 (decorative, `aria-hidden`)
+- The How I work step headings are "Assess", "Prototype", "Deploy", "Support", without trailing periods
+- The 404 page `<title>`: "Page not found — Outcore Tech"
 
 ---
 
