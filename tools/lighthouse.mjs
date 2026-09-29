@@ -8,7 +8,7 @@ import { chromium } from '@playwright/test';
 const CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
 const url = process.argv[2];
 const runs = Number(process.argv[3] ?? 3);
-if (!url) {
+if (!url || !Number.isInteger(runs) || runs < 1) {
   console.error('Usage: node tools/lighthouse.mjs <url> [runs=3]');
   process.exit(2);
 }
@@ -29,7 +29,12 @@ for (let i = 1; i <= runs; i += 1) {
       await writeFile(`lighthouse-${new URL(url).host.replace(/[^a-z0-9.-]/gi, '_')}.json`, result.report);
     }
   } finally {
-    await chrome.kill();
+    // chrome-launcher's Windows temp-dir cleanup can throw EPERM after a successful run; never let cleanup lose the scores.
+    try {
+      await chrome.kill();
+    } catch (error) {
+      console.warn(`warning: Chrome cleanup failed (${error.code ?? error.message}); continuing`);
+    }
   }
 }
 
