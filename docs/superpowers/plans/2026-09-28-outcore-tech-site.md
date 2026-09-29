@@ -8,8 +8,8 @@
 
 **Tech Stack:**
 - HTML5, CSS (custom properties, `color-mix`, `:user-invalid`), vanilla JS (ES2022)
-- Node ≥ 24.2 (for `import.meta.main`); the local machine has 24.5.0
-- `@playwright/test` 1.63.0, `@axe-core/playwright` 4.13.0, `html-validate` 11.4.0 (the newest release that supports Node 24.0–24.7), `lighthouse` 13.5.0 and `chrome-launcher` 1.2.1, `@fontsource-variable/ibm-plex-sans` 5.3.0, `@fontsource/ibm-plex-mono` 5.3.0
+- Node ≥ 24.8 (html-validate 11.16 requires it; `import.meta.main` needs ≥ 24.2). The local machine runs 24.19.0 LTS, and CI runs the latest 24.x.
+- `@playwright/test` 1.63.0, `@axe-core/playwright` 4.13.0, `html-validate` 11.16.1, `lighthouse` 13.5.0 and `chrome-launcher` 1.2.1, `@fontsource-variable/ibm-plex-sans` 5.3.0, `@fontsource/ibm-plex-mono` 5.3.0
 - GitHub Actions: `actions/checkout@v7`, `actions/setup-node@v7`, `actions/upload-artifact@v7`, `actions/configure-pages@v6`, `actions/upload-pages-artifact@v5`, `actions/deploy-pages@v5`
 
 **Spec:** `docs/superpowers/specs/2026-09-28-outcore-tech-site-design.md`. Read the spec before starting any task; section numbers (§) below refer to it.
@@ -93,7 +93,7 @@ These are the failure modes most likely to bite a real visitor that the spec imp
   "type": "module",
   "description": "Source for https://outcoretech.com (deployed folder: site/)",
   "engines": {
-    "node": ">=24.2"
+    "node": ">=24.8"
   },
   "scripts": {
     "serve": "node tools/serve.mjs site",
@@ -112,7 +112,7 @@ These are the failure modes most likely to bite a real visitor that the spec imp
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@playwright/test": "1.63.0",
     "chrome-launcher": "1.2.1",
-    "html-validate": "11.4.0",
+    "html-validate": "11.16.1",
     "lighthouse": "13.5.0"
   }
 }

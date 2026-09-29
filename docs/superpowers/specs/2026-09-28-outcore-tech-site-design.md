@@ -236,7 +236,7 @@ Hidden fields are listed in §5.3.
   - Address and area served are left out because neither was supplied. Email is deliberately left out to limit scraping.
 - `robots.txt` allows everything and references `https://outcoretech.com/sitemap.xml`. `sitemap.xml` lists only `https://outcoretech.com/`, with no `<lastmod>`.
 
-### 3.12 Interface microcopy (added during planning; Ari to approve)
+### 3.12 Interface microcopy (added during planning; approved by Ari 2026-09-29)
 These are small UI strings that §3.1–3.11 didn't list:
 - Skip link: "Skip to content"
 - Mobile menu button: "Menu"
