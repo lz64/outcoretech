@@ -389,6 +389,49 @@
           <h2 id="contact-title">Tell me what you're building, or what needs fixing.</h2>
           <p class="contact-lead">Share a few details and I'll get back to you.</p>
         </div>
+        <div class="card contact-panel">
+          <p id="message-sent" class="form-sent" tabindex="-1">Thanks — your message is on its way. I'll be in touch soon.</p>
+          <form id="contact-form" class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+            <input type="hidden" name="access_key" value="98353593-5ec7-47a2-8dbe-5ffe29725846">
+            <input type="hidden" name="subject" value="New inquiry – Outcore Tech">
+            <input type="hidden" name="from_name" value="Outcore Tech website">
+            <input type="hidden" name="redirect" value="https://lz64.github.io/outcoretech/#message-sent">
+            <!-- [html-validate-disable-next input-attributes, valid-autocomplete -- spec §5.3 requires this exact honeypot markup] -->
+            <input type="checkbox" name="botcheck" hidden tabindex="-1" autocomplete="off">
+            <div class="field">
+              <label for="f-name">Name</label>
+              <input id="f-name" name="name" type="text" autocomplete="name" maxlength="100" required>
+            </div>
+            <div class="field">
+              <label for="f-email">Email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+            </div>
+            <div class="field">
+              <label for="f-company">Company <span class="optional">(optional)</span></label>
+              <input id="f-company" name="company" type="text" autocomplete="organization" maxlength="120">
+            </div>
+            <div class="field">
+              <label for="f-service">What do you need help with?</label>
+              <select id="f-service" name="service" required>
+                <option value="" disabled selected>Choose one…</option>
+                <option>AI Engineering</option>
+                <option>IoT Prototyping</option>
+                <option>Systems Automation</option>
+                <option>Production Process Optimization</option>
+                <option>Not sure yet</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-message">Message</label>
+              <textarea id="f-message" name="message" rows="6" minlength="10" maxlength="5000" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send message</button>
+            <p class="form-privacy">I'll use these details only to reply to you. The form is delivered by Web3Forms. This site sets no cookies and uses no analytics.</p>
+            <p class="form-status" role="status"></p>
+            <div class="form-error" role="alert"></div>
+          </form>
+          <template id="form-error-template">Your message didn't go through. Please try again, or email <a href="mailto:contact@outcoretech.com">contact@outcoretech.com</a>.</template>
+        </div>
       </div>
     </section>
   </main>

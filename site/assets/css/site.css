@@ -526,3 +526,49 @@ svg { display: block; }
   font-family: var(--font-mono);
   font-size: 0.8125rem;
 }
+
+/* ---------- Contact ---------- */
+.contact-grid { display: grid; gap: 2.5rem; }
+@media (min-width: 900px) {
+  .contact-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; gap: 4rem; }
+}
+.contact-form { display: grid; gap: 1.125rem; }
+.field { display: grid; gap: 0.375rem; }
+.field label { font-size: 0.9375rem; font-weight: 500; }
+.optional { font-weight: 400; color: var(--muted); }
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.field textarea { min-height: 9rem; resize: vertical; }
+.field :user-invalid { border-color: var(--danger); }
+.contact-form .btn { justify-self: start; }
+.form-privacy { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.form-status,
+.form-error,
+.form-sent {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.form-error { color: var(--danger); border-left-color: var(--danger); }
+.form-error a { color: inherit; text-decoration: underline; }
+/* Keep the live regions rendered (in the accessibility tree) while empty so later text is announced;
+   the negative margin cancels the grid gap an empty region would otherwise add. */
+.form-status:empty,
+.form-error:empty { margin-top: -1.125rem; padding: 0; border: 0; background: none; }
+.form-sent { margin-bottom: 1.25rem; }
+.form-sent:not(:target) { display: none; }
