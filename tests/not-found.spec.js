@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { fontsReady } from './helpers.js';
 
 test('a missing nested path returns the styled 404 page', async ({ page }) => {
   const response = await page.goto('/a/b/c');
@@ -34,4 +35,17 @@ test('the 404 mobile menu works', async ({ page }) => {
   await page.goto('/x/y');
   await page.locator('.nav-toggle').click();
   await expect(page.locator('#site-nav').getByRole('link', { name: 'Contact' })).toBeVisible();
+});
+
+test('the 404 block fits the first viewport below the בס״ד line and the header', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/a/b/c');
+  await fontsReady(page);
+  const { bottom, innerHeight, scrollY } = await page.locator('.not-found').evaluate((el) => ({
+    bottom: el.getBoundingClientRect().bottom,
+    innerHeight: window.innerHeight,
+    scrollY: window.scrollY,
+  }));
+  expect(scrollY).toBe(0);
+  expect(bottom).toBeLessThanOrEqual(innerHeight + 1);
 });

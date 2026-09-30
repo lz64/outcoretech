@@ -53,13 +53,30 @@ for (const path of ['/', '/missing/x']) {
   });
 }
 
-test('the Hebrew font is not preloaded and is only fetched for Hebrew text', async ({ page }) => {
+test('the Hebrew font is not preloaded and is fetched for the בס״ד line (its unicode-range covers Hebrew)', async ({ page }) => {
   const fonts = [];
   page.on('request', (r) => { if (r.resourceType() === 'font') fonts.push(new URL(r.url()).pathname); });
   await page.goto('/');
   await fontsReady(page);
   await expect(page.locator('link[rel="preload"][href*="hebrew"]')).toHaveCount(0);
   expect(fonts).toContain('/assets/fonts/ibm-plex-sans-hebrew-400.woff2');
+
+  // The @font-face is scoped by unicode-range, so the browser fetches it only for Hebrew text.
+  const unicodeRanges = await page.evaluate(() =>
+    [...document.styleSheets]
+      .flatMap((sheet) => [...sheet.cssRules])
+      .filter((rule) => rule instanceof CSSFontFaceRule)
+      .filter((rule) => rule.style.getPropertyValue('font-family').replace(/["']/g, '').trim() === 'IBM Plex Sans Hebrew')
+      .map((rule) => rule.style.getPropertyValue('unicode-range')));
+  expect(unicodeRanges).toHaveLength(1);
+  const ranges = unicodeRanges[0].split(',').map((part) => {
+    const [lo, hi = lo] = part.trim().replace(/^u\+/i, '').split('-');
+    return [Number.parseInt(lo.replace(/\?/g, '0'), 16), Number.parseInt(hi.replace(/\?/g, 'f'), 16)];
+  });
+  for (const [lo, hi] of [[0x0590, 0x05ff], [0xfb1d, 0xfb4f]]) {
+    const hex = (n) => n.toString(16).toUpperCase().padStart(4, '0');
+    expect(ranges.some(([a, b]) => a <= lo && b >= hi), `unicode-range "${unicodeRanges[0]}" covers U+${hex(lo)}-${hex(hi)}`).toBe(true);
+  }
 });
 
 test('the bar scrolls away and the header still sticks to the top', async ({ page }) => {

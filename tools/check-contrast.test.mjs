@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { contrastRatio, parseThemes, checkContract } from './check-contrast.mjs';
 
 test('contrastRatio matches WCAG reference values', () => {
@@ -34,13 +34,18 @@ test('site.css meets the spec §4.1 contrast contract in both themes', async () 
   assert.deepEqual(failures, []);
 });
 
-test('site.css keeps hex colours inside the two :root token blocks (plus the #000 mask alpha)', async () => {
-  const css = await readFile('site/assets/css/site.css', 'utf8');
-  const outside = css
-    .replace(/:root\s*\{[^}]*\}/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/radial-gradient\([^;]*\)/g, (m) => m.replace(/#000\b/g, ''));
-  assert.deepEqual(outside.match(/#[0-9a-f]{3,8}\b/gi) ?? [], []);
+test('every stylesheet keeps hex colours inside the two :root token blocks (plus the #000 mask alpha)', async () => {
+  const dir = 'site/assets/css';
+  const files = (await readdir(dir)).filter((name) => name.endsWith('.css')).sort();
+  assert.ok(files.includes('site.css') && files.includes('nojs.css'), `stylesheets found: ${files.join(', ')}`);
+  for (const file of files) {
+    const css = await readFile(`${dir}/${file}`, 'utf8');
+    const outside = css
+      .replace(/:root\s*\{[^}]*\}/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/radial-gradient\([^;]*\)/g, (m) => m.replace(/#000\b/g, ''));
+    assert.deepEqual(outside.match(/#[0-9a-f]{3,8}\b/gi) ?? [], [], `${file}: hex colours outside :root`);
+  }
 });
 
 test('the logo mark tokens are defined per theme; the spectrum ends on the node colour', async () => {

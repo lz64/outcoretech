@@ -63,6 +63,8 @@
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --header-h: 64px;
+  /* The בס״ד bar: 6px top padding + one line of .bsd (0.875rem × 1.5). The 404 subtracts it to stay above the fold. */
+  --bsd-h: calc(6px + 1.3125rem);
   --radius: 4px;
 }
 
@@ -777,8 +779,8 @@ svg { display: block; }
   overflow: hidden;
   display: flex;
   align-items: center;
-  min-height: calc(100vh - var(--header-h));
-  min-height: calc(100dvh - var(--header-h));
+  min-height: calc(100vh - var(--bsd-h) - var(--header-h));
+  min-height: calc(100dvh - var(--bsd-h) - var(--header-h));
   padding: 6rem 0;
   border-bottom: 1px solid var(--line);
 }
@@ -789,6 +791,7 @@ svg { display: block; }
 .bsd-bar {
   display: flex;
   justify-content: flex-end;
+  height: var(--bsd-h); /* border-box: 6px padding + the 1.3125rem line below */
   padding: 6px 16px 0;
   background: var(--bg);
 }
