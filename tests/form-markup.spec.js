@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ACCESS_KEY, SUCCESS_TEXT } from './helpers.js';
 
-const REDIRECT = /^https:\/\/(lz64\.github\.io\/outcoretech|outcoretech\.com)\/#message-sent$/;
+const REDIRECT = 'https://outcoretech.com/#message-sent';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');

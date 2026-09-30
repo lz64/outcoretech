@@ -365,7 +365,7 @@ The page is fully usable with JavaScript disabled: the nav comes from §3.1 and 
    - `access_key`: Ari's key. It is designed to be public, so it is not a secret.
    - `subject`: "New inquiry – Outcore Tech"
    - `from_name`: "Outcore Tech website"
-   - `redirect`: **depends on the stage.** In Stage 1 it is `https://lz64.github.io/outcoretech/#message-sent`; from Stage 2 it is `https://outcoretech.com/#message-sent`. The free plan requires redirects to stay on the same domain as the form.
+   - `redirect`: **depends on the stage.** In Stage 1 it is `https://lz64.github.io/outcoretech/#message-sent`; from Stage 2 it is `https://outcoretech.com/#message-sent`. The free plan requires redirects to stay on the same domain as the form. The preview value was retired at Stage 2: `tools/check-config.mjs` now accepts only the `outcoretech.com` value, because a stale preview redirect would silently break the no-JS confirmation.
    - The `botcheck` honeypot, exactly `<input type="checkbox" name="botcheck" hidden tabindex="-1" autocomplete="off">`. It must be a checkbox with the `hidden` attribute, never an off-screen text input, so that keyboard and assistive-technology users can never reach it.
    - There is **no `replyto` field.** Web3Forms uses the `email` field as Reply-To by default, and a `replyto` field would override it.
 2. **With JavaScript**, `site.js` intercepts the submit:

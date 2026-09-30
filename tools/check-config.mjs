@@ -3,10 +3,9 @@
 import { readFile } from 'node:fs/promises';
 
 export const PLACEHOLDER_KEY = '00000000-0000-0000-0000-000000000000';
-export const ALLOWED_REDIRECTS = [
-  'https://lz64.github.io/outcoretech/#message-sent',
-  'https://outcoretech.com/#message-sent',
-];
+// The lz64.github.io preview redirect was retired at Stage 2: Web3Forms' free plan refuses
+// cross-domain redirects, so a stale preview value would silently break the no-JS confirmation.
+export const ALLOWED_REDIRECTS = ['https://outcoretech.com/#message-sent'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function inputValue(html, name) {

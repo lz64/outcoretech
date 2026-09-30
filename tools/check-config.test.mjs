@@ -4,21 +4,25 @@ import { readFile } from 'node:fs/promises';
 import { checkFormConfig, PLACEHOLDER_KEY } from './check-config.mjs';
 
 const KEY = '98353593-5ec7-47a2-8dbe-5ffe29725846';
-const PREVIEW = 'https://lz64.github.io/outcoretech/#message-sent';
 const LIVE = 'https://outcoretech.com/#message-sent';
-const page = ({ key = KEY, redirect = PREVIEW, extra = '', emailName = 'email' } = {}) =>
+// Retired at Stage 2: Web3Forms' free plan refuses cross-domain redirects, so this value on
+// outcoretech.com would silently break the no-JS confirmation.
+const RETIRED_PREVIEW = 'https://lz64.github.io/outcoretech/#message-sent';
+const page = ({ key = KEY, redirect = LIVE, extra = '', emailName = 'email' } = {}) =>
   `<form action="https://api.web3forms.com/submit" method="POST">
      <input type="hidden" name="access_key" value="${key}">
      <input type="hidden" name="redirect" value="${redirect}">
      <input id="f-email" name="${emailName}" type="email">${extra}
    </form>`;
 
-test('accepts the live key with the preview redirect', () => {
+test('accepts the live key with the outcoretech.com redirect', () => {
   assert.deepEqual(checkFormConfig(page(), { requireLiveKey: true }), []);
 });
 
-test('accepts the production redirect', () => {
-  assert.deepEqual(checkFormConfig(page({ redirect: LIVE }), { requireLiveKey: true }), []);
+test('rejects the retired lz64.github.io preview redirect', () => {
+  const problems = checkFormConfig(page({ redirect: RETIRED_PREVIEW }), { requireLiveKey: true });
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /^redirect /);
 });
 
 test('rejects a key that is not a UUID', () => {
