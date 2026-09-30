@@ -16,9 +16,8 @@
     .frame { position: absolute; inset: 56px 64px; display: flex; flex-direction: column; justify-content: space-between; }
     .brand { display: flex; align-items: center; gap: 18px; font: 500 28px "IBM Plex Mono", monospace; letter-spacing: 0.14em; }
     .brand svg { width: 52px; height: 52px; }
-    .ring { fill: none; stroke: #e7eaee; stroke-width: 2; stroke-linecap: round; }
-    .core, .node { fill: #ffb020; }
-    .trace { fill: none; stroke: #ffb020; stroke-width: 2; stroke-linecap: round; }
+    .trace { fill: none; stroke: #e7eaee; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: #ffb020; }
     .status { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; font: 500 18px "IBM Plex Mono", monospace; letter-spacing: 0.12em; color: #9ba5b1; }
     .dot { width: 12px; height: 12px; border-radius: 50%; background: #ffb020; box-shadow: 0 0 0 6px rgba(255, 176, 32, 0.25); }
     h1 { margin: 0; max-width: 1000px; font-size: 60px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
@@ -30,10 +29,8 @@
   <div class="frame">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path class="ring" d="M26.34 12.24A11 11 0 1 1 19.76 5.66"/>
-        <circle class="core" cx="16" cy="16" r="4.5"/>
-        <path class="trace" d="M19.2 12.8L26.5 5.5"/>
-        <circle class="node" cx="27" cy="5" r="2.25"/>
+        <path class="trace" d="M3.25 18H9.5L15.5 25.25L25.5 8.75"/>
+        <circle class="node" cx="25.5" cy="8.75" r="3.5"/>
       </svg>
       OUTCORE TECH
     </div>

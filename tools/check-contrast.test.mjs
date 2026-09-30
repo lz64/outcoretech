@@ -33,3 +33,30 @@ test('site.css meets the spec §4.1 contrast contract in both themes', async () 
   const failures = checkContract(parseThemes(css)).filter((r) => !r.pass);
   assert.deepEqual(failures, []);
 });
+
+test('site.css keeps hex colours inside the two :root token blocks (plus the #000 mask alpha)', async () => {
+  const css = await readFile('site/assets/css/site.css', 'utf8');
+  const outside = css
+    .replace(/:root\s*\{[^}]*\}/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/radial-gradient\([^;]*\)/g, (m) => m.replace(/#000\b/g, ''));
+  assert.deepEqual(outside.match(/#[0-9a-f]{3,8}\b/gi) ?? [], []);
+});
+
+test('the logo mark tokens are defined per theme; the spectrum ends on the node colour', async () => {
+  const { light, dark } = parseThemes(await readFile('site/assets/css/site.css', 'utf8'));
+  for (const [theme, t] of Object.entries({ light, dark })) {
+    for (const name of ['spectrum-1', 'spectrum-2', 'spectrum-3', 'spectrum-4', 'spectrum-5', 'spectrum-6', 'signal-node', 'signal-node-off']) {
+      assert.match(t[name] ?? '', /^#[0-9a-f]{6}$/, `${theme} --${name} is an opaque hex colour`);
+    }
+    assert.equal(t['spectrum-6'], t['signal-node'], `${theme}: --spectrum-6 equals --signal-node`);
+  }
+  // The unlit node is a dim amber: between the header background (--surface at 90% over --bg) and the lit node.
+  const header = { light: '#ffffff', dark: '#151a20' };
+  for (const [theme, t] of Object.entries({ light, dark })) {
+    const toNode = contrastRatio(t['signal-node-off'], t['signal-node']);
+    const toHeader = contrastRatio(t['signal-node-off'], header[theme]);
+    assert.ok(toNode > 1.3 && toHeader > 1.3, `${theme} --signal-node-off is distinct from both (${toHeader} / ${toNode})`);
+    assert.ok(contrastRatio(header[theme], t['signal-node']) > Math.max(toNode, toHeader), `${theme} --signal-node-off sits between them`);
+  }
+});

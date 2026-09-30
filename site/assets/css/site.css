@@ -24,6 +24,15 @@
   font-style: normal;
   font-display: swap;
 }
+/* Hebrew subset, used only by the בס״ד line. Not preloaded; unicode-range means it's fetched only for Hebrew text. */
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  src: url("../fonts/ibm-plex-sans-hebrew-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F;
+}
 
 /* ---------- Tokens: light (default) ---------- */
 :root {
@@ -39,6 +48,18 @@
   --on-accent: #16110a;
   --focus: #8a5a00;
   --danger: #b42318;
+  /* Logo mark (decorative, exempt from the contrast contract). The spectrum ends on the node colour;
+     --signal-node-off is the unlit node, a dim amber on the header (--surface at 90% over --bg). */
+  --spectrum-1: #7c3aed;
+  --spectrum-2: #2563eb;
+  --spectrum-3: #0891b2;
+  --spectrum-4: #1aa957;
+  --spectrum-5: #d9a400;
+  --spectrum-6: #f5a30f;
+  --signal-node: #f5a30f;
+  --signal-node-off: #fbd693;
+  --mark-bloom-opacity: 0.45;
+  --mark-beam-opacity: 0.38;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --header-h: 64px;
@@ -60,6 +81,16 @@
     --on-accent: #16110a;
     --focus: #ffb020;
     --danger: #ff7a70;
+    --spectrum-1: #8b5cf6;
+    --spectrum-2: #3b82f6;
+    --spectrum-3: #06b6d4;
+    --spectrum-4: #22c55e;
+    --spectrum-5: #eab308;
+    --spectrum-6: #ffb020;
+    --signal-node: #ffb020;
+    --signal-node-off: #674f20;
+    --mark-bloom-opacity: 0.8;
+    --mark-beam-opacity: 0.5;
   }
 }
 
@@ -203,10 +234,6 @@ svg { display: block; }
   text-transform: uppercase;
   white-space: nowrap;
 }
-.mark { width: 28px; height: 28px; flex: none; }
-.mark-ring { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.mark-core, .mark-node { fill: var(--accent); }
-.mark-trace { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
 .site-nav ul { display: flex; align-items: center; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
 .site-nav a:not(.btn) {
   display: inline-flex;
@@ -332,6 +359,139 @@ svg { display: block; }
 @keyframes sch-pulse {
   from { stroke-dashoffset: 6; }
   to { stroke-dashoffset: -100; }
+}
+
+/* ---------- Logo mark "Pure Scope" (decorative; spec §4.3, motion rules §4.5) ----------
+   At rest it is the ink trace (currentColor) plus the amber node; every other layer is invisible.
+   Motion (WCAG 2.2.2): CSS only; plays once on load (0.25 s delay + 3.4 s = 3.65 s); replays on hover or
+   keyboard focus of the brand link; never under reduced motion. Fill-mode is "backwards", so every layer drops
+   back to its resting state when the run ends (holding the end frame with "forwards" on the filtered layers
+   triggers a Chrome filter artifact).
+   Timeline (% of 3.4 s): the beam sweeps x 1→31 over 0–44.118%; the lit trace's head tracks it (vertices at
+   12.5% / 21.324%, node reached at 36.029%); the node lights over 30.882–36.029% and blooms; over 58–94% the
+   spectrum drains left→right into the node, uncovering the settled ink trace. */
+.mark { width: 28px; height: 28px; flex: none; overflow: visible; }
+.mark-s1 { stop-color: var(--spectrum-1); }
+.mark-s2 { stop-color: var(--spectrum-2); }
+.mark-s3 { stop-color: var(--spectrum-3); }
+.mark-s4 { stop-color: var(--spectrum-4); }
+.mark-s5 { stop-color: var(--spectrum-5); }
+.mark-s6 { stop-color: var(--spectrum-6); }
+.mark-trace, .mark-lit, .mark-bloom { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.mark-trace { stroke: currentColor; }
+.mark-lit, .mark-bloom { stroke-dasharray: 1 1.2; stroke-dashoffset: 1; opacity: 0; }
+.mark-lit { stroke-width: 2.7; }
+.mark-bloom { stroke-width: 3.5; }
+.mark-node { fill: var(--signal-node); }
+.mark-flare { fill: var(--signal-node); opacity: 0; transform-box: fill-box; transform-origin: center; }
+.mark-beam { opacity: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards; }
+  .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards; }
+  .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards; }
+  .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards; }
+  .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards; }
+  .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards; }
+  /* The replay adds a second, identical run under a new name; the finished load run is left alone. */
+  .brand:hover .mark .mark-trace,
+  .brand:focus-visible .mark .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards, mark-trace-r 3.4s linear 0s 1 backwards; }
+  .brand:hover .mark .mark-bloom,
+  .brand:focus-visible .mark .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards, mark-bloom-r 3.4s linear 0s 1 backwards; }
+  .brand:hover .mark .mark-lit,
+  .brand:focus-visible .mark .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards, mark-lit-r 3.4s linear 0s 1 backwards; }
+  .brand:hover .mark .mark-flare,
+  .brand:focus-visible .mark .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards, mark-flare-r 3.4s linear 0s 1 backwards; }
+  .brand:hover .mark .mark-node,
+  .brand:focus-visible .mark .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards, mark-node-r 3.4s linear 0s 1 backwards; }
+  .brand:hover .mark .mark-beam,
+  .brand:focus-visible .mark .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards, mark-beam-r 3.4s linear 0s 1 backwards; }
+  @keyframes mark-trace {
+    0%, 36.029% { opacity: 0.22; }
+    48.029%, 100% { opacity: 1; }
+  }
+  @keyframes mark-trace-r {
+    0%, 36.029% { opacity: 0.22; }
+    48.029%, 100% { opacity: 1; }
+  }
+  @keyframes mark-bloom {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    3.309% { stroke-dashoffset: 1; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    12.5% { stroke-dashoffset: 0.8212; }
+    21.324% { stroke-dashoffset: 0.552; }
+    36.029% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    42.029% { opacity: var(--mark-bloom-opacity); }
+    58% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.5); }
+    68.112% { stroke-dashoffset: -0.1788; }
+    77.82% { stroke-dashoffset: -0.448; }
+    94% { stroke-dashoffset: -1; opacity: calc(var(--mark-bloom-opacity) * 0.4); }
+    100% { stroke-dashoffset: -1; opacity: 0; }
+  }
+  @keyframes mark-bloom-r {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    3.309% { stroke-dashoffset: 1; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    12.5% { stroke-dashoffset: 0.8212; }
+    21.324% { stroke-dashoffset: 0.552; }
+    36.029% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    42.029% { opacity: var(--mark-bloom-opacity); }
+    58% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.5); }
+    68.112% { stroke-dashoffset: -0.1788; }
+    77.82% { stroke-dashoffset: -0.448; }
+    94% { stroke-dashoffset: -1; opacity: calc(var(--mark-bloom-opacity) * 0.4); }
+    100% { stroke-dashoffset: -1; opacity: 0; }
+  }
+  @keyframes mark-lit {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    3.309% { stroke-dashoffset: 1; opacity: 1; }
+    12.5% { stroke-dashoffset: 0.8212; }
+    21.324% { stroke-dashoffset: 0.552; }
+    36.029%, 58% { stroke-dashoffset: 0; }
+    68.112% { stroke-dashoffset: -0.1788; }
+    77.82% { stroke-dashoffset: -0.448; }
+    94% { stroke-dashoffset: -1; opacity: 1; }
+    100% { stroke-dashoffset: -1; opacity: 0; }
+  }
+  @keyframes mark-lit-r {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    3.309% { stroke-dashoffset: 1; opacity: 1; }
+    12.5% { stroke-dashoffset: 0.8212; }
+    21.324% { stroke-dashoffset: 0.552; }
+    36.029%, 58% { stroke-dashoffset: 0; }
+    68.112% { stroke-dashoffset: -0.1788; }
+    77.82% { stroke-dashoffset: -0.448; }
+    94% { stroke-dashoffset: -1; opacity: 1; }
+    100% { stroke-dashoffset: -1; opacity: 0; }
+  }
+  @keyframes mark-flare {
+    0%, 35.029% { opacity: 0; transform: scale(0.85); }
+    39.029% { opacity: 0.95; transform: scale(1.32); }
+    58.029% { opacity: 0.35; transform: scale(1.12); }
+    81.029%, 100% { opacity: 0; transform: scale(1); }
+  }
+  @keyframes mark-flare-r {
+    0%, 35.029% { opacity: 0; transform: scale(0.85); }
+    39.029% { opacity: 0.95; transform: scale(1.32); }
+    58.029% { opacity: 0.35; transform: scale(1.12); }
+    81.029%, 100% { opacity: 0; transform: scale(1); }
+  }
+  @keyframes mark-node {
+    0%, 30.882% { fill: var(--signal-node-off); }
+    36.029%, 100% { fill: var(--signal-node); }
+  }
+  @keyframes mark-node-r {
+    0%, 30.882% { fill: var(--signal-node-off); }
+    36.029%, 100% { fill: var(--signal-node); }
+  }
+  @keyframes mark-beam {
+    0% { transform: translateX(1px); opacity: 0; }
+    3%, 34.029% { opacity: var(--mark-beam-opacity); }
+    44.118%, 100% { transform: translateX(31px); opacity: 0; }
+  }
+  @keyframes mark-beam-r {
+    0% { transform: translateX(1px); opacity: 0; }
+    3%, 34.029% { opacity: var(--mark-beam-opacity); }
+    44.118%, 100% { transform: translateX(31px); opacity: 0; }
+  }
 }
 
 /* ---------- Reduced motion: nothing moves ---------- */
@@ -624,3 +784,14 @@ svg { display: block; }
 }
 .not-found .container { position: relative; }
 .not-found h1 { max-width: 20ch; }
+
+/* ---------- בס״ד line: top right of every page, above the sticky header; it scrolls away with the page ---------- */
+.bsd-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 16px 0;
+  background: var(--bg);
+}
+@media (min-width: 480px) { .bsd-bar { padding-inline: 24px; } }
+@media (min-width: 1024px) { .bsd-bar { padding-inline: 32px; } }
+.bsd { margin: 0; font: 400 0.875rem/1.5 "IBM Plex Sans Hebrew", var(--font-sans); color: var(--muted); }

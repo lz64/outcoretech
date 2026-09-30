@@ -7,17 +7,14 @@
     html, body { margin: 0; width: 100%; height: 100%; }
     body { display: grid; place-items: center; background: #0e1115; }
     svg { width: 72%; height: 72%; }
-    .ring { fill: none; stroke: #e7eaee; stroke-width: 2.25; stroke-linecap: round; }
-    .core, .node { fill: #ffb020; }
-    .trace { fill: none; stroke: #ffb020; stroke-width: 2.25; stroke-linecap: round; }
+    .trace { fill: none; stroke: #e7eaee; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: #ffb020; }
   </style>
 </head>
 <body>
   <svg viewBox="0 0 32 32" aria-hidden="true">
-    <path class="ring" d="M26.34 12.24A11 11 0 1 1 19.76 5.66"/>
-    <circle class="core" cx="16" cy="16" r="4.5"/>
-    <path class="trace" d="M19.2 12.8L26.5 5.5"/>
-    <circle class="node" cx="27" cy="5" r="2.25"/>
+    <path class="trace" d="M3.25 18H9.5L15.5 25.25L25.5 8.75"/>
+    <circle class="node" cx="25.5" cy="8.75" r="3.75"/>
   </svg>
 </body>
 </html>

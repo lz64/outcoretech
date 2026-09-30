@@ -59,6 +59,7 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 
 ### 3.1 Header (sticky, `--header-h: 64px`)
 - Logo mark and the wordmark **OUTCORE TECH**, linking to the top of the page. The brand link's accessible name is "Outcore Tech", taken from the wordmark. The logo SVG is decorative and `aria-hidden`, so the name isn't announced twice.
+- **בס״ד** at the top right of every page (`index.html` and `404.html`), above the header: `<div class="bsd-bar"><p class="bsd" lang="he" dir="rtl">בס״ד</p></div>` sits immediately before `<header class="site-header">`. The letters are U+05D1 U+05E1 U+05F4 U+05D3 (the mark is the Hebrew gershayim, not a quote character). It is set in IBM Plex Sans Hebrew, 0.875 rem, in `--muted`, right-aligned to the page's side gutters (16 / 24 / 32 px) on the `--bg` background. The bar isn't sticky: it scrolls away, and the header below it still sticks at `top: 0` (approved by Ari 2026-09-29).
 - `<nav id="site-nav" aria-label="Primary">` holds **Services · Industries · Work · About** and a highlighted **Contact** button.
 - **≥ 45em (720 px at the default text size):** the links are inline.
 - **Below 45em (720 px at the default text size):** the header shows only the logo mark, the wordmark, and `<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>`.
@@ -245,6 +246,7 @@ These are small UI strings that §3.1–3.11 didn't list:
 - Industry tiles are numbered 01–07 (decorative, `aria-hidden`)
 - The How I work step headings are "Assess", "Prototype", "Deploy", "Support", without trailing periods
 - The 404 page `<title>`: "Page not found — Outcore Tech"
+- בס״ד (top right, every page)
 
 ---
 
@@ -267,12 +269,17 @@ The page follows the OS setting via `prefers-color-scheme`, and `color-scheme: l
 | `--on-accent` | `#16110a` | `#16110a` | text on amber fills |
 | `--focus` | `#ffb020` | `#8a5a00` | focus ring |
 | `--danger` | `#ff7a70` | `#b42318` | failure message text and invalid-field borders |
+| `--spectrum-1` … `--spectrum-6` | `#8b5cf6` `#3b82f6` `#06b6d4` `#22c55e` `#eab308` `#ffb020` | `#7c3aed` `#2563eb` `#0891b2` `#1aa957` `#d9a400` `#f5a30f` | **decorative only**: the logo mark's scan light, violet → blue → cyan → green → yellow → amber. `--spectrum-6` always equals `--signal-node`, so the spectrum ends exactly on the node colour |
+| `--signal-node` | `#ffb020` | `#f5a30f` | **decorative only**: the logo mark's amber output node |
+| `--signal-node-off` | `#674f20` | `#fbd693` | **decorative only**: the unlit node while the scan beam approaches. An opaque dim amber tuned to the real header background (`--surface` at 90% over `--bg`, about `#151a20` dark and `#ffffff` light): 35% (dark) and 45% (light) of the node colour over it |
+
+The logo mark also uses two unitless opacity factors, `--mark-bloom-opacity` (0.8 dark, 0.45 light) and `--mark-beam-opacity` (0.5 dark, 0.38 light). They live in the same two `:root` blocks.
 
 **Contrast contract**, asserted by an automated check in both themes against `--bg`, `--surface`, and `--surface-2`:
 - `--text`, `--muted`, `--accent-text`, and `--danger` meet ≥ 4.5:1.
 - `--on-accent` on `--accent` meets ≥ 4.5:1.
 - `--field-border` and `--focus` meet ≥ 3:1.
-- `--line`, the grid, the traces, and the status dot are decorative and exempt.
+- `--line`, the grid, the traces, the status dot, and the logo mark's `--spectrum-1`…`--spectrum-6`, `--signal-node`, and `--signal-node-off` tokens are decorative and exempt.
 
 If any value fails the check, it is adjusted in the build and the new value is recorded here.
 
@@ -282,8 +289,9 @@ If any value fails the check, it is adjusted in the build and the new value is r
   - `ibm-plex-sans-latin-var.woff2` (variable, weights 400–600)
   - `ibm-plex-mono-latin-400.woff2`
   - `ibm-plex-mono-latin-500.woff2`
-- All three use `font-display: swap`. Exactly two are preloaded: the Sans variable file and Mono 400, each via `<link rel="preload" as="font" type="font/woff2" crossorigin>`. No third-party font requests are made.
-- Glyphs outside the Latin subset (the → arrow and the ● status dot) are drawn as inline SVG or CSS, not as text.
+- A fourth file, `ibm-plex-sans-hebrew-400.woff2` (**IBM Plex Sans Hebrew** 400, Hebrew subset, SIL OFL, also listed in `OFL.txt`), is used only for the בס״ד line. It is **not preloaded**, and its `@font-face` is scoped with `unicode-range: U+0590-05FF, U+FB1D-FB4F`, so the browser fetches it only for Hebrew text.
+- All four use `font-display: swap`. Exactly two are preloaded: the Sans variable file and Mono 400, each via `<link rel="preload" as="font" type="font/woff2" crossorigin>`. No third-party font requests are made.
+- Glyphs outside the Latin subset (the → arrow and the ● status dot) are drawn as inline SVG or CSS, not as text. The one exception is the Hebrew בס״ד, which has its own subset file.
 - The type scale uses `clamp()`: the H1 runs from about 2.25 rem on mobile to about 4 rem on desktop, and body text is 1.0625 rem with a line height of 1.6.
 
 ### 4.3 Motifs
@@ -291,7 +299,10 @@ If any value fails the check, it is adjusted in the build and the new value is r
 - 1 px `--line` bordered cards with corner tick marks.
 - Mono index numbers (`01`–`04`).
 - A focus ring on every interactive element: `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }`. It is never removed without a replacement.
-- A logo mark of a solid core inside a ring, with one trace breaking out of the ring ("out of the core"), drawn as SVG and reused for the favicon.
+- The logo mark, "Pure Scope": a scope line (a flat signal that dips, then rises sharply into a check) with no box around it, ending in a solid amber output node. In its 32×32 viewBox the trace is `M3.25 18H9.5L15.5 25.25L25.5 8.75` and the node is a circle at 25.5 / 8.75 with r 3.5. The header shows it at 28×28 px with `overflow: visible`, so the bloom feathers rather than being clipped. It appears once per page, in the header (none in the footer).
+  - At rest it is the ink trace (`currentColor`, so `--text`) plus the node in `--signal-node`. Every other layer is invisible, and presentation attributes on the inline SVG keep that static mark correct if the CSS is late or missing.
+  - On load, a vertical scan beam sweeps left to right and writes the line in spectrum light (`--spectrum-1` → `--spectrum-6`, violet → amber). The node, dim until then (`--signal-node-off`), lights and blooms when the beam reaches it. The light then drains into the node and the line settles to plain ink. The spectrum is kept understated. Motion rules are in §4.5.
+  - Static versions (ink trace plus amber node, no motion) are `favicon.svg` (heavier stroke and node for small sizes, light/dark via `prefers-color-scheme`), `logo.svg` (with the `OUTCORE TECH` wordmark), and the icon and Open Graph sources in `tools/brand/`, which render `apple-touch-icon.png`, `favicon.ico`, and `og-image.png` with `#e7eaee` ink on the dark background.
 
 ### 4.4 Layout
 - Container max width 1160 px. Side gutters are 16 px below 480 px, 24 px up to 1024 px, and 32 px above that.
@@ -307,6 +318,7 @@ If any value fails the check, it is adjusted in the build and the new value is r
 - Every form control has a visible `<label>`. Status messages use live regions.
 - Links inside running text, including the failure message's mailto, are underlined, because color alone doesn't distinguish them.
 - All motion is covered by §3.2's 5-second limit and stops under reduced motion.
+- The logo mark's motion (WCAG 2.2.2) auto-plays **once**, for **3.65 s** in total (0.25 s delay + 3.4 s), with fill-mode `backwards` so it returns to the static mark at rest. It replays only on hover or keyboard focus of the brand link (`.brand:hover .mark`, `.brand:focus-visible .mark`). It is CSS only, every animation rule sits inside `@media (prefers-reduced-motion: no-preference)`, and under reduced motion it **doesn't move at all** (the global `prefers-reduced-motion: reduce` kill-switch stays as a backstop).
 - Decorative SVGs are `aria-hidden="true"`.
 
 ---
