@@ -160,6 +160,9 @@ node tools/lighthouse.mjs https://outcoretech.com/
 - The "Pause motion" button scrolls away with the top bar while the logo keeps looping in the sticky header. It meets WCAG 2.2.2 (it is the second tab stop on every page), but mouse users must scroll up to reach it.
 - `tools/motion.test.mjs` only parses the `animation:` shorthand. A rule written with `animation-*` longhands would slip past the static guard (the browser tests would still catch most cases).
 - The loop rest state is checked through computed styles. A pixel comparison of the live resting logo would also catch paint artifacts.
+- Cross-browser: the automated tests run in Chromium only. A one-off run on 2026-10-01 in Playwright's Firefox and WebKit builds found no functional defect (motion, pause button, menu and form all work). Some tests fail there for test-only reasons (focus and font-family reporting differ), so those engines are not part of CI.
+- WebKit (seen in Playwright's Windows build only, not confirmed on real Safari): the 404 page is not painted until the page has finished loading, so a slow script delays its first paint. Optional fix: add a small decorative graphic to the 404 page.
+- `tests/motion-handover.spec.js`: the `untilClock` helper waits on real time and can miss its window on a stalled machine. It then fails loudly after 30 s (never a false pass); CI retries once.
 - GitHub's `ubuntu-latest` runner image moves to Ubuntu 26 from 2026-10-19. CI should keep working; watch the first run after that date.
 
 ## 9. Where things live
