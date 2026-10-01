@@ -8,6 +8,54 @@
   const MOTION_KEY = 'motion'; // localStorage; also read by the inline script in <head>
   const SUCCESS_TEXT = "Thanks — your message is on its way. I'll be in touch soon.";
 
+  // The handover from the one-time animations to the loops at page load (spec §4.5).
+  // Invariant, kept by site.css and checked by tools/motion.test.mjs: each loop timeline starts with its finite
+  // timeline (the same pass at the same speed, then a rest). So a loop can take over at the point its finite
+  // animation has reached, and nothing restarts when this script arrives late. Every duration and delay is read
+  // from the CSS; none is repeated here.
+  const MOVING = '.mark-trace, .mark-bloom, .mark-lit, .mark-flare, .mark-node, .mark-beam, .sch-pulse';
+  const lastOf = (list) => list.split(',').pop().trim(); // a hover replay lists a second animation; the last one shows
+  const ms = (time) => Number.parseFloat(time) * (time.endsWith('ms') ? 1 : 1000);
+
+  // Before the switch: the timing of each element's finite animation (the computed style keeps it after the
+  // animation has finished) and its clock if it is still running. Elements with no animation (reduced motion,
+  // or a browser without getAnimations) are left out.
+  function finiteClocks() {
+    const clocks = new Map();
+    if (!Element.prototype.getAnimations) return clocks;
+    for (const element of document.querySelectorAll(MOVING)) {
+      const style = getComputedStyle(element);
+      if (style.animationName === 'none') continue;
+      const running = element.getAnimations().filter((a) => a.playState !== 'finished' && a.currentTime !== null).pop();
+      clocks.set(element, {
+        delay: ms(lastOf(style.animationDelay)),
+        duration: ms(lastOf(style.animationDuration)),
+        iterations: Number.parseFloat(lastOf(style.animationIterationCount)),
+        time: running ? running.currentTime : null,
+      });
+    }
+    return clocks;
+  }
+
+  // After the switch: move each new loop animation to the point its finite animation had reached.
+  function continueLoops(clocks) {
+    for (const [element, finite] of clocks) {
+      const loop = element.getAnimations().pop();
+      if (!loop || !loop.effect) continue;
+      const passStart = loop.effect.getComputedTiming().delay; // the loop's own start delay
+      const active = finite.time === null ? 0 : finite.time - finite.delay; // time since the finite start delay ended
+      let time;
+      if (finite.time === null || active >= finite.duration * finite.iterations) {
+        time = passStart + finite.duration; // finished: the first instant of the loop's rest, so the element stays at rest
+      } else if (active < 0) {
+        time = passStart + active; // still in the start delay: keep what is left of it
+      } else {
+        time = passStart + (active % finite.duration); // mid-pass; the modulo maps the hero pulse's second pass onto the loop's one pass
+      }
+      if (Number.isFinite(time)) loop.currentTime = time;
+    }
+  }
+
   // Both pulses loop only while this script runs and the pause control is on the page (WCAG 2.2.2; spec §4.5).
   // The state lives in data-motion on <html>: "loop" or "paused". Without it the CSS keeps the finite motion.
   function initMotion() {
@@ -27,7 +75,14 @@
     } catch {
       // Storage is blocked: start looping; the button still works for this page view.
     }
-    apply(stored === 'paused' ? 'paused' : 'loop');
+    if (stored === 'paused') {
+      apply('paused');
+    } else {
+      // Only here, at page load, do the loops carry on from the finite animations. "Play motion" starts them fresh.
+      const clocks = finiteClocks();
+      apply('loop');
+      continueLoops(clocks);
+    }
     button.hidden = false;
 
     button.addEventListener('click', () => {

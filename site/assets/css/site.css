@@ -347,7 +347,11 @@ svg { display: block; }
      each with a rest between passes.
    - "paused" (the visitor's choice, remembered in localStorage): animation: none, so both show their rest state.
    Every animation rule and keyframe sits inside @media (prefers-reduced-motion: no-preference), so under
-   "reduce" nothing moves in any state, and the button is not displayed. tools/motion.test.mjs checks all of this. */
+   "reduce" nothing moves in any state, and the button is not displayed. tools/motion.test.mjs checks all of this.
+   Handover invariant: after its start delay, each loop timeline starts with its finite timeline (the same pass at
+   the same speed) and then rests. At page load site.js carries the animation clock over from the finite animation
+   to the loop, so nothing restarts when the script arrives late. Change a finite animation and its loop together:
+   tools/motion.test.mjs checks that their keyframes and durations stay aligned. */
 
 /* ---------- Hero schematic (decorative) ---------- */
 .schematic { width: 100%; max-width: 520px; height: auto; justify-self: center; }
@@ -369,7 +373,9 @@ svg { display: block; }
 /* The dash is 6 long on a path of length 100: at offset 6 it waits before the start, below -100 past the end.
    Finite: 0.1 s + 2 × 2.4 s = 4.9 s. Loop: a 3.2 s cycle, the same 2.4 s crossing, then a 0.8 s rest off the path.
    The loop rests at -101, not -100: at exactly -100 the dash starts on the path's last point, and its round cap
-   paints a dot there for the whole rest. */
+   paints a dot there for the whole rest.
+   Handover invariant (see "Motion states"): sch-pulse-loop starts with the sch-pulse pass. Its crossing must end at
+   2.4 / 3.2 = 75% of the cycle, with the same start offset and easing. */
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-motion]) .sch-pulse { animation: sch-pulse 2.4s ease-in-out 0.1s 2; }
   :root[data-motion="loop"] .sch-pulse { animation: sch-pulse-loop 3.2s ease-in-out 0.1s infinite; }
@@ -386,7 +392,8 @@ svg { display: block; }
 
 /* ---------- Logo mark "Pure Scope" (decorative; spec §4.3, motion rules §4.5) ----------
    At rest it is the ink trace (currentColor) plus the amber node; every other layer is invisible.
-   Motion (WCAG 2.2.2; states above): CSS only; never under reduced motion.
+   Motion (WCAG 2.2.2; states above): CSS animations only (site.js sets the state and, at page load, the loops'
+   clock); never under reduced motion.
    Finite (no data-motion): plays once on load (0.25 s delay + 3.4 s = 3.65 s) and replays on hover or keyboard
    focus of the brand link. Fill-mode is "backwards", so every layer drops back to its resting state when the
    run ends (holding the end frame with "forwards" on the filtered layers triggers a Chrome filter artifact).
@@ -434,7 +441,9 @@ svg { display: block; }
   :root:not([data-motion]) .brand:focus-visible .mark .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards, mark-node-r 3.4s linear 0s 1 backwards; }
   :root:not([data-motion]) .brand:hover .mark .mark-beam,
   :root:not([data-motion]) .brand:focus-visible .mark .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards, mark-beam-r 3.4s linear 0s 1 backwards; }
-  /* Looping (site.js runs and shows the pause button), and paused (nothing moves, not even on hover). */
+  /* Looping (site.js runs and shows the pause button), and paused (nothing moves, not even on hover).
+     Handover invariant (see "Motion states"): each mark-*-loop timeline starts with its mark-* timeline, stop for
+     stop at the same times, with the same easing. site.js relies on it to continue the scan at page load. */
   :root[data-motion="loop"] .mark-trace { animation: mark-trace-loop 6.5s linear 0.25s infinite backwards; }
   :root[data-motion="loop"] .mark-bloom { animation: mark-bloom-loop 6.5s linear 0.25s infinite backwards; }
   :root[data-motion="loop"] .mark-lit { animation: mark-lit-loop 6.5s linear 0.25s infinite backwards; }
@@ -533,7 +542,8 @@ svg { display: block; }
     3%, 34.029% { opacity: var(--mark-beam-opacity); }
     44.118%, 100% { transform: translateX(31px); opacity: 0; }
   }
-  /* The loop: the scan above with its percentages × 3.4 / 6.5, then the rest and the ease back (see the header comment). */
+  /* The loop: the scan above with its percentages × 3.4 / 6.5, then the rest and the ease back (see the header comment).
+     Handover invariant: add no stop inside the scan part (0–52.308%) that the scan keyframes above do not have. */
   @keyframes mark-trace-loop {
     0%, 18.846% { opacity: 0.22; }
     25.123% { opacity: 1; }

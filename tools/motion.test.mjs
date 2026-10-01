@@ -62,14 +62,14 @@ function animatedRules(blocks) {
     }));
 }
 
-// A @keyframes block as a Map of percentage → sorted declarations. `animation-timing-function` is left out,
-// because it shapes the interval that follows a stop, not the stop's own state.
-function keyframeStops(blocks, name) {
+// A @keyframes block as a Map of percentage → sorted declarations. `animation-timing-function` is left out
+// (unless `keepTiming` is set), because it shapes the interval that follows a stop, not the stop's own state.
+function keyframeStops(blocks, name, keepTiming = false) {
   const frames = blocks.find((b) => KEYFRAMES.exec(b.prelude)?.[1] === name);
   assert.ok(frames, `@keyframes ${name} exists`);
   const stops = new Map();
   for (const stop of blocks.filter((b) => inside(b, frames))) {
-    const declarations = stop.body.split(';').map(squash).filter((d) => d && !d.startsWith('animation-timing-function'));
+    const declarations = stop.body.split(';').map(squash).filter((d) => d && (keepTiming || !d.startsWith('animation-timing-function')));
     for (const selector of stop.prelude.split(',').map(squash)) {
       const percent = selector === 'from' ? 0 : selector === 'to' ? 100 : Number.parseFloat(selector);
       assert.ok(Number.isFinite(percent), `${name}: keyframe selector "${selector}"`);
@@ -201,6 +201,71 @@ test('the hero pulse loop keeps the dash off the path at both ends of its cycle'
   assert.ok(arrival >= 70 && arrival <= 80, `the dash crosses the route in about 75% of the cycle, then rests (${arrival}%)`);
   const loop = animatedRules(blocks).flatMap((r) => r.animations).find((a) => a.startsWith('sch-pulse-loop '));
   assert.ok(seconds(loop) >= 3 && seconds(loop) <= 3.5, `the hero pulse cycle is about 3.2 s (${loop})`);
+});
+
+// site.js carries the animation clock over from each finite animation to its loop at page load (spec §4.5), which
+// is only right while the loop timeline starts with the finite timeline: the same stops at the same times, then a rest.
+// The durations are read from the `animation:` declarations, so retiming one side alone fails here.
+test('handover invariant: after the start delay, each loop timeline starts with its finite timeline', async () => {
+  const { blocks } = await motionBlocks();
+  const rules = animatedRules(blocks);
+  const TIMING = 'animation-timing-function';
+  // "name duration easing …", as every rule in site.css writes the shorthand.
+  const shorthand = (name) => {
+    const animation = rules.flatMap((r) => r.animations).find((a) => a.startsWith(`${name} `));
+    assert.ok(animation, `an animation rule uses ${name}`);
+    return { duration: seconds(animation), easing: animation.split(' ')[2] };
+  };
+  const state = (declarations) => declarations.filter((d) => !d.startsWith(TIMING));
+  const round = (percent) => Math.round(percent * 1000) / 1000;
+
+  for (const name of [...LAYERS.map((layer) => `mark-${layer}`), 'sch-pulse']) {
+    const [finiteRun, loopRun] = [shorthand(name), shorthand(`${name}-loop`)];
+    assert.equal(loopRun.easing, finiteRun.easing, `${name}-loop uses the easing of ${name}`);
+    const scale = finiteRun.duration / loopRun.duration;
+    const end = 100 * scale; // where the finite timeline ends inside the loop cycle
+    const finite = keyframeStops(blocks, name);
+    const loop = keyframeStops(blocks, `${name}-loop`, true);
+    const at = (percent) => [...loop.keys()].find((p) => Math.abs(p - percent) <= 0.01);
+
+    // Every finite stop before the end sits in the loop at its rescaled time, in the same state …
+    for (const [percent, declarations] of finite) {
+      if (percent === 100) continue;
+      const stop = at(percent * scale);
+      assert.ok(stop !== undefined, `${name}-loop has a stop at ${round(percent * scale)}% (${name} ${percent}% × ${finiteRun.duration} s / ${loopRun.duration} s)`);
+      assert.deepEqual(state(loop.get(stop)), declarations, `${name}-loop ${stop}% matches ${name} ${percent}%`);
+    }
+    // … and the loop adds no stop of its own inside that part, which would change the pass.
+    const count = (stops, limit) => [...stops.keys()].filter((p) => p < limit).length;
+    assert.equal(count(loop, end - 0.01), count(finite, 100), `${name}-loop has exactly the stops of ${name} before ${round(end)}%`);
+
+    if (name === 'sch-pulse') {
+      // The hero pulse: its crossing ends where the finite pass ends. (The loop's end offset is 1 further, off the path;
+      // see 'the hero pulse loop keeps the dash off the path'.)
+      const offsets = track(loop, 'stroke-dashoffset').map(([percent, value]) => [percent, Number(value)]);
+      const arrival = offsets.find(([, value]) => value === offsets.at(-1)[1])[0];
+      assert.ok(Math.abs(arrival - end) <= 0.01, `sch-pulse-loop's crossing ends at ${round(end)}% of the cycle (${arrival}%)`);
+      const finiteEnd = Number(track(finite, 'stroke-dashoffset').at(-1)[1]);
+      assert.ok(Math.abs(offsets.at(-1)[1] - finiteEnd) <= 1.5, `sch-pulse-loop crosses the same distance as sch-pulse (${offsets.at(-1)[1]} / ${finiteEnd})`);
+      continue;
+    }
+    // The logo: at the end of the scan the loop is in the scan's end state. Either it has that stop, or each value
+    // was reached at an earlier stop and is held until after the end (the next stop repeats it, or step-end holds it).
+    const endStop = at(end);
+    if (endStop !== undefined) {
+      assert.deepEqual(state(loop.get(endStop)), finite.get(100), `${name}-loop ${endStop}% matches ${name} 100%`);
+      continue;
+    }
+    for (const declaration of finite.get(100)) {
+      const property = declaration.slice(0, declaration.indexOf(':'));
+      const values = track(loop, property);
+      const index = values.findLastIndex(([percent]) => percent < end);
+      assert.ok(index >= 0 && index + 1 < values.length, `${name}-loop sets ${property} before and after ${round(end)}%`);
+      const [[from, value], [, next]] = [values[index], values[index + 1]];
+      assert.equal(`${property}: ${value}`, declaration, `${name}-loop reaches the end state of ${name} by ${from}%`);
+      assert.ok(next === value || loop.get(from).includes(`${TIMING}: step-end`), `${name}-loop holds ${declaration} from ${from}% past ${round(end)}%`);
+    }
+  }
 });
 
 test('both pages carry the same pause control and the one-line pre-paint script right after the stylesheet links', async () => {
