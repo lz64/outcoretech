@@ -88,6 +88,15 @@ const track = (stops, property) =>
 
 const seconds = (animation) => Number.parseFloat(animation.match(/\b([\d.]+)s\b/)[1]);
 
+// The duration and easing of one animation, from "name duration easing …", as every rule in site.css writes the
+// shorthand. A rule that lists the animation again (the hover replay rules list the load run first) must not retime it.
+function shorthand(rules, name) {
+  const written = rules.flatMap((r) => r.animations).filter((a) => a.startsWith(`${name} `));
+  assert.ok(written.length > 0, `an animation rule uses ${name}`);
+  assert.deepEqual([...new Set(written)], [written[0]], `every rule writes ${name} the same way`);
+  return { duration: seconds(written[0]), easing: written[0].split(' ')[2] };
+}
+
 test('every mark-* and sch-pulse @keyframes sits inside @media (prefers-reduced-motion: no-preference)', async () => {
   const { blocks, unguarded } = await motionBlocks();
   const keyframes = blocks.filter((b) => KEYFRAMES.test(b.prelude));
@@ -204,36 +213,41 @@ test('the hero pulse loop keeps the dash off the path at both ends of its cycle'
 });
 
 // site.js carries the animation clock over from each finite animation to its loop at page load (spec §4.5), which
-// is only right while the loop timeline starts with the finite timeline: the same stops at the same times, then a rest.
+// is only right while the loop timeline starts with the finite timeline: the same stops at the same times, with the
+// same easing between them, then a rest.
 // The durations are read from the `animation:` declarations, so retiming one side alone fails here.
 test('handover invariant: after the start delay, each loop timeline starts with its finite timeline', async () => {
   const { blocks } = await motionBlocks();
   const rules = animatedRules(blocks);
   const TIMING = 'animation-timing-function';
-  // "name duration easing …", as every rule in site.css writes the shorthand.
-  const shorthand = (name) => {
-    const animation = rules.flatMap((r) => r.animations).find((a) => a.startsWith(`${name} `));
-    assert.ok(animation, `an animation rule uses ${name}`);
-    return { duration: seconds(animation), easing: animation.split(' ')[2] };
-  };
   const state = (declarations) => declarations.filter((d) => !d.startsWith(TIMING));
+  // A stop's own timing function: the easing of the interval that follows it. Without one, the shorthand's easing applies.
+  const timing = (declarations) => declarations.find((d) => d.startsWith(TIMING)) ?? `${TIMING}: (none; the shorthand's easing)`;
   const round = (percent) => Math.round(percent * 1000) / 1000;
 
   for (const name of [...LAYERS.map((layer) => `mark-${layer}`), 'sch-pulse']) {
-    const [finiteRun, loopRun] = [shorthand(name), shorthand(`${name}-loop`)];
+    const [finiteRun, loopRun] = [shorthand(rules, name), shorthand(rules, `${name}-loop`)];
     assert.equal(loopRun.easing, finiteRun.easing, `${name}-loop uses the easing of ${name}`);
     const scale = finiteRun.duration / loopRun.duration;
     const end = 100 * scale; // where the finite timeline ends inside the loop cycle
-    const finite = keyframeStops(blocks, name);
+    const finite = keyframeStops(blocks, name, true);
     const loop = keyframeStops(blocks, `${name}-loop`, true);
     const at = (percent) => [...loop.keys()].find((p) => Math.abs(p - percent) <= 0.01);
+    const endState = state(finite.get(100));
+    const lastBeforeEnd = [...finite.keys()].filter((p) => p < 100).at(-1);
 
     // Every finite stop before the end sits in the loop at its rescaled time, in the same state …
     for (const [percent, declarations] of finite) {
       if (percent === 100) continue;
       const stop = at(percent * scale);
       assert.ok(stop !== undefined, `${name}-loop has a stop at ${round(percent * scale)}% (${name} ${percent}% × ${finiteRun.duration} s / ${loopRun.duration} s)`);
-      assert.deepEqual(state(loop.get(stop)), declarations, `${name}-loop ${stop}% matches ${name} ${percent}%`);
+      assert.deepEqual(state(loop.get(stop)), state(declarations), `${name}-loop ${stop}% matches ${name} ${percent}%`);
+      // … and with the same timing function, so the interval that follows it runs the same way. The one exception is
+      // the stop from which the end state is held: the finite run is already in its end state there (nothing changes
+      // until its end), and the loop holds that state through its rest with step-end.
+      const holdsEndState =
+        percent === lastBeforeEnd && state(declarations).join('; ') === endState.join('; ') && timing(loop.get(stop)) === `${TIMING}: step-end`;
+      if (!holdsEndState) assert.equal(timing(loop.get(stop)), timing(declarations), `${name}-loop ${stop}% has the timing function of ${name} ${percent}%`);
     }
     // … and the loop adds no stop of its own inside that part, which would change the pass.
     const count = (stops, limit) => [...stops.keys()].filter((p) => p < limit).length;
@@ -253,10 +267,11 @@ test('handover invariant: after the start delay, each loop timeline starts with 
     // was reached at an earlier stop and is held until after the end (the next stop repeats it, or step-end holds it).
     const endStop = at(end);
     if (endStop !== undefined) {
-      assert.deepEqual(state(loop.get(endStop)), finite.get(100), `${name}-loop ${endStop}% matches ${name} 100%`);
+      // (This stop's own timing function shapes what follows the scan: the loop's rest.)
+      assert.deepEqual(state(loop.get(endStop)), endState, `${name}-loop ${endStop}% matches ${name} 100%`);
       continue;
     }
-    for (const declaration of finite.get(100)) {
+    for (const declaration of endState) {
       const property = declaration.slice(0, declaration.indexOf(':'));
       const values = track(loop, property);
       const index = values.findLastIndex(([percent]) => percent < end);
@@ -265,6 +280,20 @@ test('handover invariant: after the start delay, each loop timeline starts with 
       assert.equal(`${property}: ${value}`, declaration, `${name}-loop reaches the end state of ${name} by ${from}%`);
       assert.ok(next === value || loop.get(from).includes(`${TIMING}: step-end`), `${name}-loop holds ${declaration} from ${from}% past ${round(end)}%`);
     }
+  }
+});
+
+// A hover replay can be the animation that is running when site.js takes over, and the loop continues it like the
+// load run. So the replay must be the load run again: the same keyframes (with their timing functions) at the same
+// duration and easing. Only its start delay differs. The hero pulse has no replay.
+test('each hover replay (mark-*-r) has the duration and easing of its load run', async () => {
+  const { blocks } = await motionBlocks();
+  const rules = animatedRules(blocks);
+  for (const layer of LAYERS) {
+    const [load, replay] = [shorthand(rules, `mark-${layer}`), shorthand(rules, `mark-${layer}-r`)];
+    assert.equal(replay.duration, load.duration, `mark-${layer}-r lasts as long as mark-${layer}`);
+    assert.equal(replay.easing, load.easing, `mark-${layer}-r uses the easing of mark-${layer}`);
+    assert.deepEqual([...keyframeStops(blocks, `mark-${layer}-r`, true)], [...keyframeStops(blocks, `mark-${layer}`, true)], `mark-${layer}-r has the keyframes and timing functions of mark-${layer}`);
   }
 });
 

@@ -95,6 +95,13 @@ const token = (page, name) =>
     return color;
   }, name);
 
+// The messages of the page's uncaught errors, collected as they happen.
+const pageErrors = (page) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  return errors;
+};
+
 const names = (clocks) => clocks.map((a) => a.name);
 // The one clock that a group of animations shares.
 const sharedClock = (clocks, label) => {
@@ -179,6 +186,44 @@ test('logo, site.js arrives during a hover replay: the loop continues the replay
   expect(Math.abs(carried - (t + DELAY + elapsed))).toBeLessThanOrEqual(TOLERANCE);
   expect(after.litOffset).toBeLessThan(0.5);
   expect(after.effects[0], 'the spectrum line stays lit').toBe(1);
+});
+
+// A brand hovered in the first 250 ms starts a replay that ends before the load run does (the replay has no start
+// delay). In that window the load run is the animation that shows, but the replay is the last one listed, so the
+// timing must come from the load run's own list entry. Reproduced exactly: the replay is finished by hand and the
+// load run is frozen 150 ms before its end.
+test('logo, the hover replay has finished and the load run has not: the loop continues the load run, with its own start delay', async ({ page }) => {
+  const LOAD_RUN = DELAY + SCAN - 150;
+  await instrument(page);
+  const release = await holdSiteJs(page);
+  await page.goto('/', { waitUntil: 'commit' });
+  await untilClock(page, '.mark-beam', 0);
+  // Frozen first, so the load run cannot end before the hover lands.
+  await page.evaluate(() => document.getAnimations().forEach((animation) => animation.pause()));
+  await page.locator('.site-header .brand').hover();
+  await page.waitForFunction(() => document.getAnimations().filter((a) => a.animationName.endsWith('-r')).length === 6);
+  await page.evaluate((time) => {
+    for (const animation of document.getAnimations()) {
+      if (animation.animationName.endsWith('-r')) animation.finish();
+      else if (animation.animationName.startsWith('mark-')) animation.currentTime = time;
+    }
+  }, LOAD_RUN);
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('.mark-lit')).animationName)).toBe('mark-lit, mark-lit-r');
+  const { before, after } = await handover(page, release);
+
+  // Only the load run is left, and the replay is still the last animation listed.
+  expect(names(before.mark)).toEqual(LAYERS.map((layer) => `mark-${layer}`));
+  expect(sharedClock(before.mark, 'load run')).toBe(LOAD_RUN);
+  // Both start delays are 250 ms, so the loop's clock is the load run's clock. (With the replay's delay of 0 the
+  // run would count as finished, and the loop would jump to its rest.)
+  expect(names(after.mark)).toEqual(LAYERS.map((layer) => `mark-${layer}-loop`));
+  expect(sharedClock(after.mark, 'loop')).toBeCloseTo(LOAD_RUN, 6);
+  // The look does not change at the switch: the spectrum line is still fading out.
+  expect(before.effects[0]).toBeGreaterThan(0.5);
+  expect(after.effects[0]).toBeCloseTo(before.effects[0], 3);
+  expect(after.litOffset).toBeCloseTo(before.litOffset, 3);
+  expect(after.traceOpacity).toBeCloseTo(before.traceOpacity, 3);
+  expect(after.nodeFill).toBe(before.nodeFill);
 });
 
 // The finite pulse plays two passes; the loop plays the same pass, then rests. The handover keeps the point of the pass.
@@ -270,9 +315,15 @@ for (const [label, markTime, pulseTime] of [
 
 test('"Play motion" starts both loops from the beginning: the clock is carried over only at page load', async ({ page }) => {
   await instrument(page);
-  await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-motion', 'loop');
+  // site.js arrives mid-scan, so the page-load switch carries clocks that are far from 0. A "Play motion" that
+  // reused them, or carried anything over, would not start near 0.
+  const release = await holdSiteJs(page);
+  await page.goto('/', { waitUntil: 'commit' });
   await untilClock(page, '.mark-lit', 1500);
+  const { after } = await handover(page, release);
+  expect(sharedClock(after.mark, 'carried at page load')).toBeGreaterThan(1000);
+  expect(after.pulse[0].time, 'carried at page load').toBeGreaterThan(1000);
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'loop');
   const button = page.locator('.motion-toggle');
   await button.click();
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'paused');
@@ -293,12 +344,6 @@ test('"Play motion" starts both loops from the beginning: the clock is carried o
 });
 
 test.describe('nothing to carry over', () => {
-  const pageErrors = (page) => {
-    const errors = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    return errors;
-  };
-
   for (const path of ['/', '/missing/x']) {
     test.describe('reduced motion', () => {
       test.use({ reducedMotion: 'reduce' });
@@ -337,5 +382,67 @@ test.describe('nothing to carry over', () => {
       expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
       expect(errors).toEqual([]);
     });
+  }
+});
+
+// The carry-over is a nicety, and it is checked in Chromium only. If a Web Animations call throws in another
+// browser, the loop simply starts fresh and the rest of site.js still runs: the pause button (without it the loop
+// could not be stopped) and the mobile menu.
+test.describe('a failing carry-over does not stop site.js', () => {
+  test.use({ viewport: { width: 375, height: 800 } });
+
+  const FAULTS = {
+    'Element.prototype.getAnimations throws': () => {
+      window.__faults = 0;
+      Element.prototype.getAnimations = function getAnimations() {
+        window.__faults += 1;
+        throw new Error('getAnimations is broken');
+      };
+    },
+    "Animation.prototype's currentTime setter throws": () => {
+      window.__faults = 0;
+      const descriptor = Object.getOwnPropertyDescriptor(Animation.prototype, 'currentTime');
+      Object.defineProperty(Animation.prototype, 'currentTime', {
+        ...descriptor,
+        set() {
+          window.__faults += 1;
+          throw new Error('the currentTime setter is broken');
+        },
+      });
+    },
+  };
+
+  for (const [fault, breakIt] of Object.entries(FAULTS)) {
+    for (const path of ['/', '/missing/x']) {
+      test(`${path}: ${fault}: the loop starts fresh, and the pause button and the menu work`, async ({ page }) => {
+        const errors = pageErrors(page);
+        await page.addInitScript(breakIt);
+        await page.goto(path);
+        expect.soft(errors, 'no uncaught error stops site.js').toEqual([]);
+        expect(await page.evaluate(() => window.__faults), 'site.js reached the broken call').toBeGreaterThan(0);
+
+        const html = page.locator('html');
+        await expect(html).toHaveAttribute('data-motion', 'loop');
+        const running = await page.evaluate(() => document.getAnimations().map((a) => a.animationName));
+        expect(running.length).toBeGreaterThan(0);
+        expect(running.filter((name) => !name.endsWith('-loop'))).toEqual([]);
+
+        const button = page.locator('.motion-toggle');
+        await expect(button).toBeVisible();
+        await expect(button).toHaveAccessibleName('Pause motion');
+        await button.click();
+        await expect(html).toHaveAttribute('data-motion', 'paused');
+        await expect(button).toHaveAccessibleName('Play motion');
+        await button.click();
+        await expect(html).toHaveAttribute('data-motion', 'loop');
+
+        const toggle = page.locator('.nav-toggle');
+        await expect(page.locator('#site-nav')).toBeHidden();
+        await toggle.click();
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(page.locator('#site-nav').getByRole('link', { name: 'Services' })).toBeVisible();
+        expect(errors).toEqual([]);
+      });
+    }
   }
 });

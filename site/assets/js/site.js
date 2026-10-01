@@ -14,12 +14,13 @@
   // animation has reached, and nothing restarts when this script arrives late. Every duration and delay is read
   // from the CSS; none is repeated here.
   const MOVING = '.mark-trace, .mark-bloom, .mark-lit, .mark-flare, .mark-node, .mark-beam, .sch-pulse';
-  const lastOf = (list) => list.split(',').pop().trim(); // a hover replay lists a second animation; the last one shows
   const ms = (time) => Number.parseFloat(time) * (time.endsWith('ms') ? 1 : 1000);
 
   // Before the switch: the timing of each element's finite animation (the computed style keeps it after the
   // animation has finished) and its clock if it is still running. Elements with no animation (reduced motion,
   // or a browser without getAnimations) are left out.
+  // A hover replay lists a second animation, so the timing is read from the list entry of the animation that is
+  // still running (the last entry when none is).
   function finiteClocks() {
     const clocks = new Map();
     if (!Element.prototype.getAnimations) return clocks;
@@ -27,10 +28,13 @@
       const style = getComputedStyle(element);
       if (style.animationName === 'none') continue;
       const running = element.getAnimations().filter((a) => a.playState !== 'finished' && a.currentTime !== null).pop();
+      const names = style.animationName.split(',').map((n) => n.trim());
+      const i = running ? names.lastIndexOf(running.animationName) : names.length - 1;
+      const entry = (list) => list.split(',')[i].trim();
       clocks.set(element, {
-        delay: ms(lastOf(style.animationDelay)),
-        duration: ms(lastOf(style.animationDuration)),
-        iterations: Number.parseFloat(lastOf(style.animationIterationCount)),
+        delay: ms(entry(style.animationDelay)),
+        duration: ms(entry(style.animationDuration)),
+        iterations: Number.parseFloat(entry(style.animationIterationCount)),
         time: running ? running.currentTime : null,
       });
     }
@@ -79,9 +83,19 @@
       apply('paused');
     } else {
       // Only here, at page load, do the loops carry on from the finite animations. "Play motion" starts them fresh.
-      const clocks = finiteClocks();
+      // The carry-over must never stop the rest of this script: if it throws, the loop simply starts fresh.
+      let clocks = new Map();
+      try {
+        clocks = finiteClocks();
+      } catch {
+        // Nothing is carried over.
+      }
       apply('loop');
-      continueLoops(clocks);
+      try {
+        continueLoops(clocks);
+      } catch {
+        // The loop starts fresh.
+      }
     }
     button.hidden = false;
 
