@@ -2,7 +2,7 @@
 
 Source for **https://outcoretech.com**, the marketing site for Outcore Tech, an engineering consultancy covering AI engineering, IoT prototyping, systems automation, and production process optimization.
 
-The site is a single static page plus a 404 page: plain HTML, CSS, and one small progressive-enhancement JS file, with **no build step**.
+The site is a single static page plus a 404 page: plain HTML, CSS, and one small progressive-enhancement JS file (plus a one-line inline script in `<head>` for the motion state), with **no build step**.
 
 - Design spec (binding): `docs/superpowers/specs/2026-09-28-outcore-tech-site-design.md`
 - Implementation plan (completed): `docs/superpowers/plans/2026-09-28-outcore-tech-site.md`

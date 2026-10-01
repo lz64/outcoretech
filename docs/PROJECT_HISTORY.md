@@ -157,6 +157,10 @@ node tools/lighthouse.mjs https://outcoretech.com/
 - `.bsd-bar` has a fixed height (so the 404 page fits above the fold). With a browser minimum font size above 14px, its text could spill under the header. Optional fix: `overflow: hidden`.
 - `tools/dns.mjs` lowercases only CNAME values, so a case-only change in an MX hostname (which DNS treats as identical) would show as a false "changed". Its CLI also prints a raw stack trace on resolver failures.
 - The schematic stays full size (not reduced) when stacked between 720 and 899px. This is cosmetic.
+- Motion handover: on a slow first load, when `site.js` arrives late, the logo restarts once as it switches from the one-time scan to the loop. Optional fix: carry the animation clock over in `initMotion()`.
+- The "Pause motion" button scrolls away with the top bar while the logo keeps looping in the sticky header. It meets WCAG 2.2.2 (it is the second tab stop on every page), but mouse users must scroll up to reach it.
+- `tools/motion.test.mjs` only parses the `animation:` shorthand. A rule written with `animation-*` longhands would slip past the static guard (the browser tests would still catch most cases).
+- The loop rest state is checked through computed styles. A pixel comparison of the live resting logo would also catch paint artifacts.
 - GitHub's `ubuntu-latest` runner image moves to Ubuntu 26 from 2026-10-19. CI should keep working; watch the first run after that date.
 
 ## 9. Where things live
