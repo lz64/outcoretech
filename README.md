@@ -29,8 +29,8 @@ npm test               # all of the above plus the browser tests
 
 ## Deploy
 
-Push to `main`. GitHub Actions validates, then publishes `site/` to GitHub Pages at https://lz64.github.io/outcoretech/ until the custom domain is connected, then at https://outcoretech.com.
-After launch there is no staging URL, so preview locally before pushing.
+Push to `main`. GitHub Actions validates, then publishes `site/` to GitHub Pages at https://outcoretech.com (the old https://lz64.github.io/outcoretech/ preview URL 301s there).
+There is no staging URL, so preview locally before pushing.
 
 ## Maintenance commands
 
