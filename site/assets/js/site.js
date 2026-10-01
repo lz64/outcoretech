@@ -1,10 +1,45 @@
 /* Outcore Tech — progressive enhancement only.
-   Without this file the nav falls back to nojs.css and the form to a native POST (spec §3.1, §5.3). */
+   Without this file the nav falls back to nojs.css, the form to a native POST, and the motion to its
+   finite run with no pause button (spec §3.1, §4.5, §5.3). */
 (() => {
   'use strict';
 
   const SEND_TIMEOUT_MS = 15000;
+  const MOTION_KEY = 'motion'; // localStorage; also read by the inline script in <head>
   const SUCCESS_TEXT = "Thanks — your message is on its way. I'll be in touch soon.";
+
+  // Both pulses loop only while this script runs and the pause control is on the page (WCAG 2.2.2; spec §4.5).
+  // The state lives in data-motion on <html>: "loop" or "paused". Without it the CSS keeps the finite motion.
+  function initMotion() {
+    const root = document.documentElement;
+    const button = document.querySelector('.motion-toggle');
+    const label = button && button.querySelector('.motion-label');
+    // No pause control on this page: a loop could not be stopped, so leave the state as it is.
+    if (!label) return;
+
+    const apply = (state) => {
+      root.dataset.motion = state;
+      label.textContent = state === 'paused' ? 'Play motion' : 'Pause motion';
+    };
+    let stored = null;
+    try {
+      stored = localStorage.getItem(MOTION_KEY);
+    } catch {
+      // Storage is blocked: start looping; the button still works for this page view.
+    }
+    apply(stored === 'paused' ? 'paused' : 'loop');
+    button.hidden = false;
+
+    button.addEventListener('click', () => {
+      const next = root.dataset.motion === 'paused' ? 'loop' : 'paused';
+      apply(next);
+      try {
+        localStorage.setItem(MOTION_KEY, next);
+      } catch {
+        // Storage is blocked: the choice holds until the page is left.
+      }
+    });
+  }
 
   function initNav() {
     const toggle = document.querySelector('.nav-toggle');
@@ -91,6 +126,7 @@
     });
   }
 
+  initMotion();
   initNav();
   initContactForm();
 })();

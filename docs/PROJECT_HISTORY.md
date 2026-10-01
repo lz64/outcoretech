@@ -30,6 +30,7 @@ Ari Friedman (the owner) made every product decision. Claude Code did the design
 | 2026-09-29 | **Stage 1:** public repo created and preview deployed. The owner approved the copy, tested the form, set Web3Forms retention to 30 days, and allow-listed the sender in Zoho. |
 | 2026-09-29 | **Redesign:** new logo mark (a 6-concept design panel with 3 judges, then a hybrid round), plus בס״ד at the top right of every page. |
 | 2026-09-30 | **Stage 2:** GitHub domain verification, GoDaddy DNS cutover, HTTPS certificate (needed a re-trigger), HTTPS enforced, the form redirect switched to the domain, production verification. Live. |
+| 2026-09-30 | **After launch:** the logo and hero pulses play continuously, with a "Pause motion" control in the top bar (§3). |
 
 ## 3. Owner decisions (the "why" behind the site)
 
@@ -47,11 +48,17 @@ Ari Friedman (the owner) made every product decision. Claude Code did the design
 - **Name:** "Outcore" comes from "outcorrect", meaning *past correct*.
 - **Logo:** "Pure Scope".
   - The shape: a signal line that runs flat, dips, then rises into a check and ends in an amber node.
-  - The motion: a spectrum scan beam writes it once on load (3.65 s) and replays on hover or focus. There is no motion under reduced motion.
+  - The motion at launch: a spectrum scan beam writes it once on load (3.65 s) and replays on hover or focus. There is no motion under reduced motion. Since 2026-09-30 it loops (see "Continuous pulses" below).
   - Chosen from a design panel: hybrid of concept B2's scope line and scan beam with B3's amber node, without B2's box.
   - The spectrum pulse was the owner's request.
 - **בס״ד** sits at the top right of every page, in IBM Plex Sans Hebrew (self-hosted, 5.5 KB).
 - **No social media links** (owner's choice). The Open Graph tags stay because messaging and email apps use them for link previews.
+- **Continuous pulses with a pause control (2026-09-30, after launch).**
+  - The owner asked for the pulse to play continuously. Both pulses now loop: the hero schematic's amber pulse (3.2 s cycle) and the logo's spectrum scan (6.5 s cycle), each with a short rest between passes "so it pulses rather than buzzes".
+  - One shared button controls both: a quiet text button, "Pause motion" / "Play motion", at the far left of the thin top bar, opposite בס״ד, on every page. It remembers the visitor's choice, and the motion stays still for anyone whose device asks for reduced motion.
+  - Why the control exists: WCAG 2.2 SC 2.2.2 requires a way to pause motion that starts automatically and lasts more than 5 seconds. The launch design avoided the need by capping motion at 5 s; looping makes the control mandatory.
+  - Without JavaScript the button can't work, so it stays hidden and the motion keeps the finite launch behaviour (logo once, hero pulse twice).
+  - The button is about 27 px tall, as tall as the bar: a recorded exception to the site's 44 px tap-target rule (spec §4.4) that still meets WCAG 2.5.8's 24 px.
 
 ## 4. How the work was done
 
@@ -95,7 +102,7 @@ Ari Friedman (the owner) made every product decision. Claude Code did the design
 - **Accessibility:**
   - The amber focus ring was 1.6:1 on light; it got its own `--focus` token.
   - Input borders were under 3:1.
-  - A looping animation violated WCAG 2.2.2. Auto-playing motion is now capped at 5 s and never loops: the hero pulse plays twice in 4.9 s, and the logo plays once in 3.65 s.
+  - A looping animation violated WCAG 2.2.2. At launch, auto-playing motion was capped at 5 s and never looped: the hero pulse played twice in 4.9 s, and the logo played once in 3.65 s. (Since 2026-09-30 both loop behind a pause control, which is the other way to meet 2.2.2; the cap still applies when JavaScript is off. See §3.)
   - Live regions hidden with `display:none` don't announce; they now stay rendered.
   - Focus dropped to `<body>` on submit; it now returns to the button.
 - **CSS specificity:** `ul[class]` (0,1,1) beat single-class component margins, which silently removed spacing. Fix: wrap the reset in `:where()`.

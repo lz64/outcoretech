@@ -48,10 +48,19 @@ node tools/dns.mjs verify dns-snapshots/<file>.json           # web records must
   - Straight apostrophes; literal `—`, `–`, `…`, `·`, `©`; `&amp;` in HTML.
   - Naming rule: "Production Process Optimization" in headings, the select, and the meta description; "Process Optimization" in the strip, tags, and title.
   - Never add unapproved claims. `tests/copy-guard.spec.js` lists forbidden phrases.
-- **Motion:**
-  - Every auto-playing animation stops by itself within 5 s in total (WCAG 2.2.2) and never loops. The hero pulse plays twice (0.1 s + 2 × 2.4 s = 4.9 s). The logo plays once on load (0.25 s + 3.4 s = 3.65 s). `tests/hero.spec.js` and `tests/logo.spec.js` enforce the 5 s cap and the no-infinite rule.
-  - `animation` declarations sit inside `@media (prefers-reduced-motion: no-preference)`, and the global `prefers-reduced-motion: reduce` kill-switch is a backstop. `tools/motion.test.mjs` parses `site.css` and checks this for the logo mark only (`mark-*` keyframes and `.mark` animation rules). `tests/hero.spec.js` checks that the hero pulse doesn't run under reduced motion.
-  - The logo replays only on `.brand:hover` / `.brand:focus-visible`.
+- **Motion** (spec §4.5). Two things move: the hero schematic's amber pulse and the logo's spectrum scan. `data-motion` on `<html>` selects one of three states, and their CSS rules are mutually exclusive:
+  - **Absent (JS did not run): finite.** Everything stops by itself within 5 s (WCAG 2.2.2). The hero pulse plays twice (0.1 s + 2 × 2.4 s = 4.9 s). The logo plays once on load (0.25 s + 3.4 s = 3.65 s) and replays only on `.brand:hover` / `.brand:focus-visible`. The pause button stays `hidden`. These rules are scoped to `:root:not([data-motion])`.
+  - **`loop` (set by `site.js`): both pulses loop forever**, with a rest between passes (logo 6.5 s cycle, hero pulse 3.2 s cycle). Motion that auto-plays for more than 5 s needs a pause mechanism, so `site.js` sets `loop` only when the `.motion-toggle` button is on the page, and reveals it. Never add looping motion that this button doesn't stop.
+  - **`paused` (the visitor's choice): `animation: none`.** Both show their rest state, and there is no hover replay. The button reads "Play motion".
+  - **The pause control** is the quiet "Pause motion" / "Play motion" text button at the far left of the top bar (`.bsd-bar`), on every page, with identical markup. Its name is its label text, and it has no `aria-pressed`. It is as tall as the bar (about 27 px) and at least 44 px wide: the one recorded exception to the 44 px tap-target rule (spec §4.4).
+  - **The choice persists** in `localStorage` key `motion` (`paused` / `loop`). A one-line inline script in `<head>`, right after the stylesheet links, applies a stored `paused` before first paint. It never sets `loop`. Storage access is wrapped in try/catch in both places.
+  - **Reduced motion:** every animation rule and keyframe sits inside `@media (prefers-reduced-motion: no-preference)`, the button is `display: none` under `reduce`, and the global `reduce` kill-switch is a backstop. Nothing moves in any state.
+  - **The loop keyframes** (`mark-*-loop`) are the scan keyframes with their percentages × 3.4 / 6.5, then a rest, then an ease back to the start state. After changing a scan keyframe, recompute its loop twin. The hero loop rests at dash offset -101, not -100, where the round cap would paint a dot.
+  - **What the tests enforce:**
+    - `tools/motion.test.mjs` parses `site.css`: every `mark-*` / `sch-pulse*` keyframe and animation rule is inside the no-preference guard; each rule is scoped to exactly one state; finite rules end within 5 s; `infinite` appears only under `loop`; no `forwards` fill; the loop keyframes match the rescaled scan; the beam and the trace head stay in step. It also pins the bar markup and the inline script in both pages.
+    - `tests/motion.spec.js` covers the button: position, name, size, keyboard, pause and resume, persistence across reloads and pages (including that the inline script works before `site.js`), reduced motion, no JS, and `localStorage` throwing.
+    - `tests/hero.spec.js` and `tests/logo.spec.js` cover the finite motion with JS disabled (5 s cap, no `infinite`, rest state, hover/focus replay) and the loops with JS (infinite, seamless loop point, rest equals the static mark, the pulse paints nothing between passes).
+    - `tests/layout-a11y.spec.js` runs axe in the `loop` and `paused` states.
   - The logo mark appears **once per page**, because its SVG ids are document-global. The footer has none.
 - **Contact form (Web3Forms):**
   - **Never automate a real submission.** Tests mock `https://api.web3forms.com/submit` with `page.route`.
@@ -59,7 +68,7 @@ node tools/dns.mjs verify dns-snapshots/<file>.json           # web records must
   - The no-JS `redirect` value must be exactly `https://outcoretech.com/#message-sent`; `check-config` rejects anything else.
   - The access key in `index.html` is public by design. `ACCESS_KEY` in `tests/helpers.js` must match it, so change both together.
 - **Fonts:** exactly two preloads, Plex Sans variable and Plex Mono 400. IBM Plex Sans Hebrew is used only for the בס״ד line, is not preloaded, and is scoped with `unicode-range`.
-- **בס״ד** appears at the top right of every page (`.bsd-bar`, `lang="he" dir="rtl"`). Keep it on any new page.
+- **בס״ד** appears at the top right of every page (`.bsd-bar`, `lang="he" dir="rtl"`), opposite the "Pause motion" button. Keep the whole bar, and the inline motion script in `<head>`, on any new page.
 
 ## Git and deploy
 

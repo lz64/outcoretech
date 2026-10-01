@@ -338,7 +338,18 @@ svg { display: block; }
   text-transform: uppercase;
 }
 
-/* ---------- Hero schematic (decorative; motion capped at 4.9 s, off under reduced motion) ---------- */
+/* ---------- Motion states (spec §4.5; WCAG 2.2.2) ----------
+   data-motion on <html> selects exactly one of three mutually exclusive rule sets for the hero pulse and the logo mark:
+   - absent (site.js did not run): finite motion that stops by itself within 5 s. The hero pulse plays twice
+     (4.9 s); the logo scan plays once (3.65 s) and again on hover or keyboard focus of the brand link.
+     No pause control is shown, and none is needed.
+   - "loop" (set by site.js, which also reveals the top bar's "Pause motion" button): both pulses loop,
+     each with a rest between passes.
+   - "paused" (the visitor's choice, remembered in localStorage): animation: none, so both show their rest state.
+   Every animation rule and keyframe sits inside @media (prefers-reduced-motion: no-preference), so under
+   "reduce" nothing moves in any state, and the button is not displayed. tools/motion.test.mjs checks all of this. */
+
+/* ---------- Hero schematic (decorative) ---------- */
 .schematic { width: 100%; max-width: 520px; height: auto; justify-self: center; }
 @media (max-width: 44.999em) { .schematic { max-width: 360px; } }
 .sch-trace { fill: none; stroke: var(--muted); stroke-opacity: 0.45; stroke-width: 1.5; }
@@ -355,23 +366,38 @@ svg { display: block; }
   stroke-dasharray: 6 200;
   stroke-dashoffset: 6;
 }
+/* The dash is 6 long on a path of length 100: at offset 6 it waits before the start, below -100 past the end.
+   Finite: 0.1 s + 2 × 2.4 s = 4.9 s. Loop: a 3.2 s cycle, the same 2.4 s crossing, then a 0.8 s rest off the path.
+   The loop rests at -101, not -100: at exactly -100 the dash starts on the path's last point, and its round cap
+   paints a dot there for the whole rest. */
 @media (prefers-reduced-motion: no-preference) {
-  .sch-pulse { animation: sch-pulse 2.4s ease-in-out 0.1s 2; }
-}
-@keyframes sch-pulse {
-  from { stroke-dashoffset: 6; }
-  to { stroke-dashoffset: -100; }
+  :root:not([data-motion]) .sch-pulse { animation: sch-pulse 2.4s ease-in-out 0.1s 2; }
+  :root[data-motion="loop"] .sch-pulse { animation: sch-pulse-loop 3.2s ease-in-out 0.1s infinite; }
+  :root[data-motion="paused"] .sch-pulse { animation: none; }
+  @keyframes sch-pulse {
+    from { stroke-dashoffset: 6; }
+    to { stroke-dashoffset: -100; }
+  }
+  @keyframes sch-pulse-loop {
+    0% { stroke-dashoffset: 6; }
+    75%, 100% { stroke-dashoffset: -101; }
+  }
 }
 
 /* ---------- Logo mark "Pure Scope" (decorative; spec §4.3, motion rules §4.5) ----------
    At rest it is the ink trace (currentColor) plus the amber node; every other layer is invisible.
-   Motion (WCAG 2.2.2): CSS only; plays once on load (0.25 s delay + 3.4 s = 3.65 s); replays on hover or
-   keyboard focus of the brand link; never under reduced motion. Fill-mode is "backwards", so every layer drops
-   back to its resting state when the run ends (holding the end frame with "forwards" on the filtered layers
-   triggers a Chrome filter artifact).
-   Timeline (% of 3.4 s): the beam sweeps x 1→31 over 0–44.118%; the lit trace's head tracks it (vertices at
-   12.5% / 21.324%, node reached at 36.029%); the node lights over 30.882–36.029% and blooms; over 58–94% the
-   spectrum drains left→right into the node, uncovering the settled ink trace. */
+   Motion (WCAG 2.2.2; states above): CSS only; never under reduced motion.
+   Finite (no data-motion): plays once on load (0.25 s delay + 3.4 s = 3.65 s) and replays on hover or keyboard
+   focus of the brand link. Fill-mode is "backwards", so every layer drops back to its resting state when the
+   run ends (holding the end frame with "forwards" on the filtered layers triggers a Chrome filter artifact).
+   Scan timeline (% of 3.4 s): the beam sweeps x 1→31 over 0–44.118%; the lit trace's head tracks it (vertices
+   at 12.5% / 21.324%, node reached at 36.029%); the node lights over 30.882–36.029% and blooms; over 58–94% the
+   spectrum drains left→right into the node, uncovering the settled ink trace.
+   Loop (data-motion="loop"): a 6.5 s cycle, same 0.25 s delay and "backwards" fill. Each mark-*-loop keyframe
+   is the scan keyframe with its percentages × 3.4 / 6.5 (so 0–52.308% is the same 3.4 s scan and the beam and
+   the trace head stay in step); then the mark rests as the static mark until 96% (2.84 s); over the last 4%
+   (0.26 s) the trace and node ease back to the start state, so the wrap to 0% is seamless. The invisible effect
+   layers hold their end state through the rest (step-end) and reset at the wrap. */
 .mark { width: 28px; height: 28px; flex: none; overflow: visible; }
 .mark-s1 { stop-color: var(--spectrum-1); }
 .mark-s2 { stop-color: var(--spectrum-2); }
@@ -389,25 +415,38 @@ svg { display: block; }
 .mark-beam { opacity: 0; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards; }
-  .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards; }
-  .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards; }
-  .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards; }
-  .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards; }
-  .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards; }
+  :root:not([data-motion]) .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards; }
   /* The replay adds a second, identical run under a new name; the finished load run is left alone. */
-  .brand:hover .mark .mark-trace,
-  .brand:focus-visible .mark .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards, mark-trace-r 3.4s linear 0s 1 backwards; }
-  .brand:hover .mark .mark-bloom,
-  .brand:focus-visible .mark .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards, mark-bloom-r 3.4s linear 0s 1 backwards; }
-  .brand:hover .mark .mark-lit,
-  .brand:focus-visible .mark .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards, mark-lit-r 3.4s linear 0s 1 backwards; }
-  .brand:hover .mark .mark-flare,
-  .brand:focus-visible .mark .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards, mark-flare-r 3.4s linear 0s 1 backwards; }
-  .brand:hover .mark .mark-node,
-  .brand:focus-visible .mark .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards, mark-node-r 3.4s linear 0s 1 backwards; }
-  .brand:hover .mark .mark-beam,
-  .brand:focus-visible .mark .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards, mark-beam-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-trace,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-trace { animation: mark-trace 3.4s linear 0.25s 1 backwards, mark-trace-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-bloom,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-bloom { animation: mark-bloom 3.4s linear 0.25s 1 backwards, mark-bloom-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-lit,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-lit { animation: mark-lit 3.4s linear 0.25s 1 backwards, mark-lit-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-flare,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-flare { animation: mark-flare 3.4s linear 0.25s 1 backwards, mark-flare-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-node,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-node { animation: mark-node 3.4s linear 0.25s 1 backwards, mark-node-r 3.4s linear 0s 1 backwards; }
+  :root:not([data-motion]) .brand:hover .mark .mark-beam,
+  :root:not([data-motion]) .brand:focus-visible .mark .mark-beam { animation: mark-beam 3.4s linear 0.25s 1 backwards, mark-beam-r 3.4s linear 0s 1 backwards; }
+  /* Looping (site.js runs and shows the pause button), and paused (nothing moves, not even on hover). */
+  :root[data-motion="loop"] .mark-trace { animation: mark-trace-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="loop"] .mark-bloom { animation: mark-bloom-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="loop"] .mark-lit { animation: mark-lit-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="loop"] .mark-flare { animation: mark-flare-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="loop"] .mark-node { animation: mark-node-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="loop"] .mark-beam { animation: mark-beam-loop 6.5s linear 0.25s infinite backwards; }
+  :root[data-motion="paused"] .mark-trace,
+  :root[data-motion="paused"] .mark-bloom,
+  :root[data-motion="paused"] .mark-lit,
+  :root[data-motion="paused"] .mark-flare,
+  :root[data-motion="paused"] .mark-node,
+  :root[data-motion="paused"] .mark-beam { animation: none; }
   @keyframes mark-trace {
     0%, 36.029% { opacity: 0.22; }
     48.029%, 100% { opacity: 1; }
@@ -493,6 +532,58 @@ svg { display: block; }
     0% { transform: translateX(1px); opacity: 0; }
     3%, 34.029% { opacity: var(--mark-beam-opacity); }
     44.118%, 100% { transform: translateX(31px); opacity: 0; }
+  }
+  /* The loop: the scan above with its percentages × 3.4 / 6.5, then the rest and the ease back (see the header comment). */
+  @keyframes mark-trace-loop {
+    0%, 18.846% { opacity: 0.22; }
+    25.123% { opacity: 1; }
+    96% { opacity: 1; animation-timing-function: ease-in-out; }
+    100% { opacity: 0.22; }
+  }
+  @keyframes mark-bloom-loop {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    1.731% { stroke-dashoffset: 1; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    6.538% { stroke-dashoffset: 0.8212; }
+    11.154% { stroke-dashoffset: 0.552; }
+    18.846% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.55); }
+    21.984% { opacity: var(--mark-bloom-opacity); }
+    30.338% { stroke-dashoffset: 0; opacity: calc(var(--mark-bloom-opacity) * 0.5); }
+    35.628% { stroke-dashoffset: -0.1788; }
+    40.706% { stroke-dashoffset: -0.448; }
+    49.169% { stroke-dashoffset: -1; opacity: calc(var(--mark-bloom-opacity) * 0.4); }
+    52.308% { stroke-dashoffset: -1; opacity: 0; animation-timing-function: step-end; }
+    100% { stroke-dashoffset: 1; opacity: 0; }
+  }
+  @keyframes mark-lit-loop {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    1.731% { stroke-dashoffset: 1; opacity: 1; }
+    6.538% { stroke-dashoffset: 0.8212; }
+    11.154% { stroke-dashoffset: 0.552; }
+    18.846%, 30.338% { stroke-dashoffset: 0; }
+    35.628% { stroke-dashoffset: -0.1788; }
+    40.706% { stroke-dashoffset: -0.448; }
+    49.169% { stroke-dashoffset: -1; opacity: 1; }
+    52.308% { stroke-dashoffset: -1; opacity: 0; animation-timing-function: step-end; }
+    100% { stroke-dashoffset: 1; opacity: 0; }
+  }
+  @keyframes mark-flare-loop {
+    0%, 18.323% { opacity: 0; transform: scale(0.85); }
+    20.415% { opacity: 0.95; transform: scale(1.32); }
+    30.354% { opacity: 0.35; transform: scale(1.12); }
+    42.384% { opacity: 0; transform: scale(1); animation-timing-function: step-end; }
+    100% { opacity: 0; transform: scale(0.85); }
+  }
+  @keyframes mark-node-loop {
+    0%, 16.154% { fill: var(--signal-node-off); }
+    18.846% { fill: var(--signal-node); }
+    96% { fill: var(--signal-node); animation-timing-function: ease-in-out; }
+    100% { fill: var(--signal-node-off); }
+  }
+  @keyframes mark-beam-loop {
+    0% { transform: translateX(1px); opacity: 0; }
+    1.569%, 17.8% { opacity: var(--mark-beam-opacity); }
+    23.077% { transform: translateX(31px); opacity: 0; animation-timing-function: step-end; }
+    100% { transform: translateX(1px); opacity: 0; }
   }
 }
 
@@ -787,14 +878,48 @@ svg { display: block; }
 .not-found .container { position: relative; }
 .not-found h1 { max-width: 20ch; }
 
-/* ---------- בס״ד line: top right of every page, above the sticky header; it scrolls away with the page ---------- */
+/* ---------- Top bar on every page, above the sticky header; it scrolls away with the page:
+   "Pause motion" at the far left (shown by site.js), בס״ד at the far right ---------- */
 .bsd-bar {
   display: flex;
-  justify-content: flex-end;
   height: var(--bsd-h); /* border-box: 6px padding + the 1.3125rem line below */
   padding: 6px 16px 0;
   background: var(--bg);
 }
 @media (min-width: 480px) { .bsd-bar { padding-inline: 24px; } }
 @media (min-width: 1024px) { .bsd-bar { padding-inline: 32px; } }
-.bsd { margin: 0; font: 400 0.875rem/1.5 "IBM Plex Sans Hebrew", var(--font-sans); color: var(--muted); }
+/* margin-left: auto keeps בס״ד at the far right whether or not the button is shown. */
+.bsd { margin: 0 0 0 auto; font: 400 0.875rem/1.5 "IBM Plex Sans Hebrew", var(--font-sans); color: var(--muted); }
+
+/* The pause control for the looping pulses (WCAG 2.2.2). It ships hidden; site.js reveals it.
+   Its box spans the bar's full height (about 27 px) and is at least 44 px wide: a recorded exception to the
+   44 px tap-target rule (spec §4.4) that keeps the top line thin and still meets WCAG 2.5.8 (24 × 24 px).
+   The negative margins pull the box over the bar's top padding and 8 px into the gutter, so the icon starts on
+   the gutter and the label shares בס״ד's line. The focus ring is the global one, drawn inside the box:
+   outside it, the viewport edge and the header would clip it. */
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 44px;
+  height: var(--bsd-h);
+  margin: -6px 0 0 -8px;
+  padding: 6px 8px 0;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: 400 0.8125rem/1 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.motion-toggle[hidden] { display: none; }
+.motion-toggle:focus-visible { outline-offset: -2px; }
+.motion-toggle:hover .motion-label { text-decoration: underline; text-underline-offset: 0.2em; }
+.motion-icon { flex: none; width: 0.75rem; height: 0.75rem; }
+.motion-icon-pause { fill: none; stroke: currentColor; stroke-width: 2; }
+.motion-icon-play { display: none; fill: currentColor; }
+:root[data-motion="paused"] .motion-icon-pause { display: none; }
+:root[data-motion="paused"] .motion-icon-play { display: inline; }
+@media (prefers-reduced-motion: reduce) {
+  .motion-toggle { display: none; }
+}

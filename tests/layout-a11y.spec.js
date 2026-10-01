@@ -59,6 +59,19 @@ for (const colorScheme of ['light', 'dark']) {
       expect(describeViolations(violations)).toEqual([]);
     });
 
+    // The sweep above runs in the default "loop" state; this covers the "paused" state (Play motion button).
+    test('zero axe violations with motion paused', async ({ page }) => {
+      for (const path of ['/', '/missing/page']) {
+        await page.goto(path);
+        await fontsReady(page);
+        if (path === '/') await page.getByRole('button', { name: 'Pause motion', exact: true }).click();
+        await expect(page.locator('html')).toHaveAttribute('data-motion', 'paused');
+        await expect(page.getByRole('button', { name: 'Play motion', exact: true })).toBeVisible();
+        const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+        expect(describeViolations(violations), path).toEqual([]);
+      }
+    });
+
     test('zero axe violations on the 404 page', async ({ page }) => {
       await page.goto('/missing/page');
       const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();

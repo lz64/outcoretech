@@ -59,7 +59,16 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 
 ### 3.1 Header (sticky, `--header-h: 64px`)
 - Logo mark and the wordmark **OUTCORE TECH**, linking to the top of the page. The brand link's accessible name is "Outcore Tech", taken from the wordmark. The logo SVG is decorative and `aria-hidden`, so the name isn't announced twice.
-- **בס״ד** at the top right of every page (`index.html` and `404.html`), above the header: `<div class="bsd-bar"><p class="bsd" lang="he" dir="rtl">בס״ד</p></div>` sits immediately before `<header class="site-header">`. The letters are U+05D1 U+05E1 U+05F4 U+05D3 (the mark is the Hebrew gershayim, not a quote character). It is set in IBM Plex Sans Hebrew, 0.875 rem, in `--muted`, right-aligned to the page's side gutters (16 / 24 / 32 px) on the `--bg` background. The bar isn't sticky: it scrolls away, and the header below it still sticks at `top: 0` (approved by Ari 2026-09-29).
+- **Top bar** on every page (`index.html` and `404.html`), above the header: `<div class="bsd-bar">` sits immediately before `<header class="site-header">`, on the `--bg` background, `--bsd-h` tall (about 27 px). It holds the motion button at the far left and בס״ד at the far right, both on the page's side gutters (16 / 24 / 32 px). The bar isn't sticky: it scrolls away, and the header below it still sticks at `top: 0` (approved by Ari 2026-09-29).
+  - **בס״ד** at the top right: `<p class="bsd" lang="he" dir="rtl">בס״ד</p>`. The letters are U+05D1 U+05E1 U+05F4 U+05D3 (the mark is the Hebrew gershayim, not a quote character). It is set in IBM Plex Sans Hebrew, 0.875 rem, in `--muted`. `margin-left: auto` keeps it at the far right whether or not the button is shown.
+  - **"Pause motion" button** at the top left (approved by Ari 2026-09-30): the one control for both looping pulses, the hero schematic's amber pulse (§3.2) and the logo's spectrum scan (§4.3). It is the pause mechanism WCAG 2.2.2 requires for motion that auto-plays for more than 5 seconds. The state model is in §4.5.
+    - Markup, identical on both pages, before the בס״ד paragraph: `<button type="button" class="motion-toggle" hidden>` holding a decorative 12×12 icon (`<svg class="motion-icon" aria-hidden="true">` with a `.motion-icon-pause` and a `.motion-icon-play` path) and `<span class="motion-label">Pause motion</span>`.
+    - It ships `hidden`, and `site.js` reveals it. Without JavaScript there is no button, and the motion is finite.
+    - The accessible name is the label text, which switches between exactly "Pause motion" and "Play motion". There is no `aria-pressed`. The icon shows pause bars while the pulses play and a play triangle while paused.
+    - It is a quiet text button: no background or border, `--muted`, IBM Plex Sans 0.8125 rem, the label underlined on hover. Its size is the exception recorded in §4.4, and its focus ring is described in §4.3.
+    - The visitor's choice is remembered (`localStorage` key `motion`: `paused` or `loop`) across reloads and pages.
+    - Under `prefers-reduced-motion: reduce` nothing moves, so the button isn't displayed.
+    - Tab order: skip link, motion button, brand link.
 - `<nav id="site-nav" aria-label="Primary">` holds **Services · Industries · Work · About** and a highlighted **Contact** button.
 - **≥ 45em (720 px at the default text size):** the links are inline.
 - **Below 45em (720 px at the default text size):** the header shows only the logo mark, the wordmark, and `<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>`.
@@ -78,7 +87,8 @@ Mono section labels such as `// SERVICES` are part of the Control Room styling.
 - Buttons: **Start a conversation** (goes to `#contact`) · **See services** (goes to `#services`), followed by an arrow drawn as inline SVG with `aria-hidden`.
 - Service index strip (mono, each item links to its card's id): `01 AI ENGINEERING · 02 IOT PROTOTYPING · 03 SYSTEMS AUTOMATION · 04 PROCESS OPTIMIZATION`
 - Decorative schematic (inline SVG, `aria-hidden="true"`): the nodes `SENSOR — CONTROLLER — EDGE — CLOUD` joined by circuit traces.
-  - After load, an amber pulse travels the traces for **at most 5 seconds in total** (for example a 2.4 s CSS animation with `animation-iteration-count: 2`), then stops (WCAG 2.2.2).
+  - **With JavaScript**, an amber pulse travels the traces in a loop (approved by Ari 2026-09-30): a cycle of about 3.2 s, in which the dash crosses the route in 2.4 s and then rests off the path for 0.8 s, so it pulses rather than buzzes. The top bar's "Pause motion" button stops it (§3.1, §4.5).
+  - **Without JavaScript** there is no pause button, so the pulse plays twice (0.1 s + 2 × 2.4 s = **4.9 s**) and then stops, inside WCAG 2.2.2's 5-second limit, as before.
   - The pulse doesn't run at all under `prefers-reduced-motion: reduce`, and it is CSS only.
   - Below 900 px the schematic sits under the text; below 45em (720 px at the default text size) it is also shown at reduced size.
 
@@ -247,6 +257,7 @@ These are small UI strings that §3.1–3.11 didn't list:
 - The How I work step headings are "Assess", "Prototype", "Deploy", "Support", without trailing periods
 - The 404 page `<title>`: "Page not found — Outcore Tech"
 - בס״ד (top right, every page)
+- Motion button (top left, every page): "Pause motion" while the pulses play, "Play motion" while they are paused (approved by Ari 2026-09-30)
 
 ---
 
@@ -298,10 +309,11 @@ If any value fails the check, it is adjusted in the build and the new value is r
 - A faint 24 px grid behind the hero.
 - 1 px `--line` bordered cards with corner tick marks.
 - Mono index numbers (`01`–`04`).
-- A focus ring on every interactive element: `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }`. It is never removed without a replacement.
+- A focus ring on every interactive element: `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }`. It is never removed without a replacement. The top bar's motion button draws the same ring inside its box (`outline-offset: -2px`): the button fills the bar's height, so a ring outside it would be clipped by the top of the viewport and covered by the header.
 - The logo mark, "Pure Scope": a scope line (a flat signal that dips, then rises sharply into a check) with no box around it, ending in a solid amber output node. In its 32×32 viewBox the trace is `M3.25 18H9.5L15.5 25.25L25.5 8.75` and the node is a circle at 25.5 / 8.75 with r 3.5. The header shows it at 28×28 px with `overflow: visible`, so the bloom feathers rather than being clipped. It appears once per page, in the header (none in the footer).
   - At rest it is the ink trace (`currentColor`, so `--text`) plus the node in `--signal-node`. Every other layer is invisible, and presentation attributes on the inline SVG keep that static mark correct if the CSS is late or missing.
   - On load, a vertical scan beam sweeps left to right and writes the line in spectrum light (`--spectrum-1` → `--spectrum-6`, violet → amber). The node, dim until then (`--signal-node-off`), lights and blooms when the beam reaches it. The light then drains into the node and the line settles to plain ink. The spectrum is kept understated. Motion rules are in §4.5.
+  - With JavaScript the scan loops (approved by Ari 2026-09-30) in a cycle of about 6.5 s: the same 3.4 s scan, then a rest of about 2.8 s as the static mark, then about 0.26 s in which the trace and node ease back to the dim start state, so the wrap-around is seamless. The top bar's "Pause motion" button stops it (§3.1). Without JavaScript the scan plays once on load and replays on hover or keyboard focus of the brand link.
   - Static versions (ink trace plus amber node, no motion) are `favicon.svg` (heavier stroke and node for small sizes, light/dark via `prefers-color-scheme`), `logo.svg` (with the `OUTCORE TECH` wordmark), and the icon and Open Graph sources in `tools/brand/`, which render `apple-touch-icon.png`, `favicon.ico`, and `og-image.png` with `#e7eaee` ink on the dark background.
 
 ### 4.4 Layout
@@ -311,14 +323,20 @@ If any value fails the check, it is adjusted in the build and the new value is r
 - `html { scroll-padding-top: calc(var(--header-h) + 8px); }` keeps anchor targets and focused elements clear of the sticky header (WCAG 2.4.11).
 - Smooth scrolling applies only under `@media (prefers-reduced-motion: no-preference)`.
 - No horizontal scroll at any width down to 320 px. Tap targets are at least 44×44 px.
+  - **Recorded exception** (approved by Ari 2026-09-30): the top bar's motion button is as tall as the bar (`--bsd-h`, about 27 px) and at least 44 px wide, so the top line stays thin. It still meets WCAG 2.5.8 (AA), which asks for at least 24×24 px.
 - The header's mobile-menu breakpoint is 45em, so it moves with the visitor's default text size (720 px at 16 px).
 
 ### 4.5 Accessibility
 - The skip link targets `<main id="main" tabindex="-1">`. There are semantic landmarks, one H1, and an ordered heading hierarchy.
 - Every form control has a visible `<label>`. Status messages use live regions.
 - Links inside running text, including the failure message's mailto, are underlined, because color alone doesn't distinguish them.
-- All motion is covered by §3.2's 5-second limit and stops under reduced motion.
-- The logo mark's motion (WCAG 2.2.2) auto-plays **once**, for **3.65 s** in total (0.25 s delay + 3.4 s), with fill-mode `backwards` so it returns to the static mark at rest. It replays only on hover or keyboard focus of the brand link (`.brand:hover .mark`, `.brand:focus-visible .mark`). It is CSS only, every animation rule sits inside `@media (prefers-reduced-motion: no-preference)`, and under reduced motion it **doesn't move at all** (the global `prefers-reduced-motion: reduce` kill-switch stays as a backstop).
+- **Motion (WCAG 2.2.2).** The only auto-playing motion is the hero pulse (§3.2) and the logo mark's scan (§4.3). `data-motion` on `<html>` selects one of three states, and the CSS rules for the three are mutually exclusive (the finite rules and the hover/focus replay are scoped to `:root:not([data-motion])`):
+  - **Absent** (JavaScript didn't run): finite motion, as before. The logo scan auto-plays **once**, for **3.65 s** in total (0.25 s delay + 3.4 s), and replays only on hover or keyboard focus of the brand link (`.brand:hover .mark`, `.brand:focus-visible .mark`). The hero pulse plays twice (**4.9 s**). Everything stops by itself within 5 seconds, so no pause control is needed, and the button stays hidden.
+  - **`loop`** (set by `site.js` when motion isn't paused): both pulses loop forever. The logo's cycle is about 6.5 s, with a rest between passes (§4.3); the hero pulse's cycle is about 3.2 s (§3.2). Because this motion auto-plays for more than 5 seconds, WCAG 2.2.2 requires a mechanism to pause it: the top bar's "Pause motion" button (§3.1). `site.js` sets `loop` only when that button is on the page.
+  - **`paused`** (the visitor paused): `animation: none` on the six mark layers and on the hero pulse, so both show their rest state (the static ink trace plus the amber node; no pulse dash), with no hover replay. The button reads "Play motion".
+  - The choice is stored in `localStorage` (key `motion`). A one-line inline script in `<head>`, right after the stylesheet links on both pages, applies a stored `paused` before the first paint, so a returning visitor who paused never sees a flash of motion. It sets only `paused`; `loop` is set only by `site.js`, which also owns the button. If storage throws, the page loops and the button still works for that page view.
+  - It is CSS only. Every animation rule and keyframe sits inside `@media (prefers-reduced-motion: no-preference)`, so under reduced motion **nothing moves in any state** and the button isn't displayed (the global `prefers-reduced-motion: reduce` kill-switch stays as a backstop).
+  - The mark's fill-mode is `backwards`, never `forwards`, so it returns to the static mark at rest (holding the end frame on the filtered layers leaves a Chrome artifact).
 - Decorative SVGs are `aria-hidden="true"`.
 
 ---
@@ -354,11 +372,11 @@ The deploy goes through **GitHub Actions**, uploading only `site/`, so specs, pl
 | `index.html` | All content, structure, metadata, and the inline SVGs (logo, schematic, arrow). All URLs are relative. | `site.css`, `nojs.css`, `site.js` (optional) |
 | `site.css` | Tokens, themes, typography, layout, components, motion | fonts |
 | `nojs.css` | No-JS header and nav layout (§3.1) | — |
-| `site.js` | (1) mobile nav toggle; (2) progressive-enhancement form submit (§5.3) | Web3Forms API |
+| `site.js` | (1) motion state and the "Pause motion" button (§4.5); (2) mobile nav toggle; (3) progressive-enhancement form submit (§5.3) | Web3Forms API |
 | `404.html` | Not-found page, with root-absolute URLs (§3.10) | `site.css` |
 | `pages.yml` | Validate `site/`, then deploy it to GitHub Pages | GitHub Actions |
 
-The page is fully usable with JavaScript disabled: the nav comes from §3.1 and the form falls back as described in §5.3.
+The page is fully usable with JavaScript disabled: the nav comes from §3.1, the form falls back as described in §5.3, and the motion is finite with no pause button (§4.5).
 
 ### 5.3 Contact form data flow
 1. `<form action="https://api.web3forms.com/submit" method="POST">`, with these hidden fields:
